@@ -19,7 +19,7 @@ namespace Challenge
         {
             MapExternal = mapExternal;
             HeadingRC = defaultHeadingUP;
-            MapOwn = new Map(Map.initMap(10,10),new Position(0,0));
+            MapOwn = new Map(Map.initMap(10, 10), new Position(0, 0));
             MapRefreshTime = 1000;
         }
         public void SetStartHeading()
@@ -27,10 +27,301 @@ namespace Challenge
 
         }
 
+        public void MoveAndUpdatePositonOnBothMap()
+        {
+            MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
+            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapOwn.PositionRC));
+        }
         public void StartCleaning()
         {
-            MapOwn = createOwnMap();
+            MapOwn = CreateOwnMap();
+
+
+            List<Position> nearestUncleaned = FindNearestUncleanedZones();
+
+
+            while (nearestUncleaned.Count > 0)
+            {
+                //MoveToNextZone(nearestUncleaned);
+
+                Position p = new Position(2, 2);
+                MapExternal.PutRoboCleanerOnMap(p, HeadingRC);
+                MapOwn.PutRoboCleanerOnMap(p, HeadingRC);
+
+                CleanActualZone();
+                nearestUncleaned = FindNearestUncleanedZones();
+            }
+
+
+
+            Console.WriteLine("\n done");
         }
+
+        private void MoveToNextZone(List<Position> nearestUncleaned)
+        {
+            MoveOnWay(FindWayTo(FindMostReachable(nearestUncleaned)));
+        }
+
+        private void RecordBarriersAround()
+        {
+            int figWall = (int)Figure.Wall;
+
+            if (WallOnTheLeft())
+            {
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheLeft(HeadingRC), figWall);
+            }
+            if (WallOnTheFront())
+            {
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheFront(HeadingRC), figWall);
+            }
+            if (WallOnTheRight())
+            {
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheRight(HeadingRC), figWall);
+            }
+
+        }
+
+        private bool WallOnTheLeft()
+        {
+            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheLeft(HeadingRC), (int)Figure.Wall);
+        }
+        private bool WallOnTheFront()
+        {
+            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheFront(HeadingRC), (int)Figure.Wall);
+        }
+        private bool WallOnTheRight()
+        {
+            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheRight(HeadingRC), (int)Figure.Wall);
+        }
+
+        private bool CleanedOnTheLeft()
+        {
+            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheLeft(HeadingRC), (int)Figure.CleanedArea);
+        }
+        private bool CleanedOnTheFront()
+        {
+            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheFront(HeadingRC), (int)Figure.CleanedArea);
+        }
+        private bool CleanedOnTheRight()
+        {
+            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheRight(HeadingRC), (int)Figure.CleanedArea);
+        }
+
+
+        private Position FindMostReachable(List<Position> nearestUncleaned)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void MoveOnWay(List<Position> lists)
+        {
+            throw new NotImplementedException();
+        }
+
+        private List<Position> FindWayTo(Position continueFrom)
+        {
+            throw new NotImplementedException();
+        }
+
+        private List<Position> FindNearestUncleanedZones()
+        {
+            int[][] mapCoords = MapOwn.Coordinates;
+            Position posRC = MapOwn.PositionRC;
+
+            int maxLength = mapCoords.Length > mapCoords[0].Length ? mapCoords.Length : mapCoords[0].Length;
+            List<Position> closestPoints = new List<Position>();
+            int i = 2;
+
+            while (closestPoints.Count == 0 && i < maxLength)
+            {
+                int y = MapOwn.PositionRC.Y;
+                int x = MapOwn.PositionRC.X;
+                int j = 0;
+
+                //for (int j = 0; j <= i; j++)
+                while (j <= i && closestPoints.Count == 0)
+                {
+
+                    /*      p
+                     *    xxxxx
+                     */
+                    try
+                    {
+                        if (mapCoords[y + i][x + j] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y + i, posRC.X + j));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+                    try
+                    {
+                        if (mapCoords[y + i][x - j] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y + i, posRC.X - j));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+
+                    /*   
+                     *   x
+                     *   x p
+                     *   x
+                     */
+                    try
+                    {
+                        if (mapCoords[y + j][x - i] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y + j, posRC.X - i));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+                    try
+                    {
+                        if (mapCoords[y - j][x - i] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y - j, posRC.X - i));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+
+                    /*     xxx
+                     *      p
+                     */
+                    try
+                    {
+                        if (mapCoords[y - i][x + j] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y - i, posRC.X + j));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+                    try
+                    {
+                        if (mapCoords[y - i][x - j] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y - i, posRC.X - j));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+
+                    /*   
+                     *      x
+                     *     px
+                     *      x
+                     */
+                    try
+                    {
+                        if (mapCoords[y + j][x + i] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y + j, posRC.X + i));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+                    try
+                    {
+                        if (mapCoords[y - j][x + i] == 0)
+                        {
+                            closestPoints.Add(new Position(posRC.Y - j, posRC.X + i));
+                        }
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ;
+                    }
+                    j++;
+                }
+                i++;
+            }
+
+            return closestPoints.Count == 0 ? null : closestPoints;
+        }
+
+
+
+        private void CleanActualZone()
+        {
+            SetHeadingToLongestWay();
+
+            do
+            {
+                RecordBarriersAround();
+
+                if (!WallOnTheFront() && !CleanedOnTheFront())
+                {
+                    MoveAndUpdatePositonOnBothMap();
+                }
+                else if (!WallOnTheRight() && !CleanedOnTheRight())
+                {
+                    TurnRightRC();
+                    MoveAndUpdatePositonOnBothMap();
+                    TurnRightRC();
+                }
+                else if (!WallOnTheLeft() && !CleanedOnTheLeft())
+                {
+                    TurnLeftRC();
+                    MoveAndUpdatePositonOnBothMap();
+                    TurnLeftRC();
+                }
+                DisplayTwoMaps(MapExternal, MapOwn);
+
+            } while (!WallOnTheFront() && !CleanedOnTheFront() ||
+                    !WallOnTheLeft() && !CleanedOnTheLeft() ||
+                  !WallOnTheRight() && !CleanedOnTheRight());
+        }
+
+        private void SetHeadingToLongestWay()
+        {
+            int startHeading = (int)HeadingRC;
+            Dictionary<Heading, int> freeWayDistance = new Dictionary<Heading, int>();
+
+            Position pos = MapOwn.PositionRC;
+            int startY = pos.Y;
+            int startX = pos.X;
+
+            int cnt;
+            int[] notAllowed = new int[] { (int)Figure.Wall, (int)Figure.CleanedArea };
+
+            do
+            {
+                cnt = 0;
+                pos = new Position(startY, startX);
+                while (CheckIfFree(MapOwn, MoveForwardRC(pos), notAllowed))
+                {
+                    pos = MoveForwardRC(pos);
+                    cnt++;
+                }
+                Position p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
+                freeWayDistance.Add(HeadingRC, cnt);
+                TurnRightRC();
+
+            } while (startHeading != (int)HeadingRC);
+
+            HeadingRC = freeWayDistance.Aggregate((stored, next) => stored.Value > next.Value ? stored : next).Key;
+            //MapOwn.PutRoboCleanerOnMap(new Position(startY, startX), HeadingRC);
+
+        }
+        
         public SortedDictionary<int, List<int>> PositionListToSortedDictionary(List<Position> positions)
         {
             //sort Y coordinates
@@ -151,7 +442,7 @@ namespace Challenge
 
                 RecordBarrier();
                 MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-                PositionDetectingRC =  MoveForwardRC(PositionDetectingRC);
+                PositionDetectingRC = MoveForwardRC(PositionDetectingRC);
                 RecordBarrier();
                 RecordPath();
                 //DisplayMap(MapExternal);
@@ -220,6 +511,10 @@ namespace Challenge
         }
 
 
+        private bool CheckIfFree(Map map, Position positionToCheck, int figureNotAllowed)
+        {
+            return map.CoordinateFigureByPosition(positionToCheck) != figureNotAllowed;
+        }
         private bool CheckIfFree(Map map, Position positionToCheck, int[] figuresNotAllowed)
         {
             bool free = true;
@@ -295,7 +590,7 @@ namespace Challenge
             }
             return newPos;
         }
-        private Map createOwnMap()
+        private Map CreateOwnMap()
         {
             (List<Position> cleanedPath, List<Position> barriers) roomDetection = DetectRoomEdges();
             SortedDictionary<int, List<int>> barrierCoordinates = PositionListToSortedDictionary(roomDetection.barriers);
@@ -312,7 +607,7 @@ namespace Challenge
                 if (xMin > barrierCoordinates[i].Min()) xMin = barrierCoordinates[i].Min();
             }
 
-            Map newMap = new Map(Map.initMap(yMax - yMin + 1,xMax - xMin + 1), new Position(0,0));
+            Map newMap = new Map(Map.initMap(yMax - yMin + 1, xMax - xMin + 1), new Position(0, 0));
             DisplayTwoMaps(MapExternal, newMap);
 
             //add detected barriers to MapOwn
@@ -346,7 +641,7 @@ namespace Challenge
             return newMap;
         }
 
-        
+
         private void DisplayMap(Map map)
         {
             Console.Clear();
