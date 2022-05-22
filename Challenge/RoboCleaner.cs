@@ -32,9 +32,8 @@ namespace Challenge
         public void StartCleaning()
         {
             MapOwn = CreateOwnMap();
-
+            
             List<Position> nearestUncleanedZones = FindNearestUncleanedZones();
-
 
             while (nearestUncleanedZones.Count > 0)
             {
@@ -44,24 +43,21 @@ namespace Challenge
                     possibleWays.Add(FindShortestWayTo(pos));
                 }
 
-                List<Position> shortestWay = possibleWays.Aggregate((stored, next) => stored.Count < next.Count ? stored : next);
+                List<Position> shortestWay = possibleWays.Aggregate((stored, next) => stored.Count > next.Count ? next : stored);
                 MoveOnWay(shortestWay);
-
-                //Position p = new Position(2, 2);
-                //MapExternal.PutRoboCleanerOnMap(p, HeadingRC);
-                //MapOwn.PutRoboCleanerOnMap(p, HeadingRC);
-
                 CleanActualZone();
                 nearestUncleanedZones = FindNearestUncleanedZones();
             }
 
-            Console.WriteLine("\n done");
         }
 
         private void MoveOnWay(List<Position> way)
         {
-            foreach (Position p in way.Skip(1))
+            int i = 1;
+
+            while (i < way.Count && CheckIfFree(MapExternal, way[i], (int)Figure.Wall))
             {
+                Position p = way[i];
                 if (MapOwn.AreaOnTheLeft(HeadingRC).Equals(p))
                 {
                     TurnLeftRC();
@@ -82,7 +78,11 @@ namespace Challenge
 
                 RecordBarriersAround();
                 MoveAndUpdatePositonOnBothMap();
+
+                DisplayTwoMaps(MapExternal, MapOwn);
+                i++;
             }
+
         }
 
         private void RecordBarriersAround()
@@ -103,29 +103,22 @@ namespace Challenge
             }
 
         }
-        //private (Position nextPos, int method) FindNextPos(Position target, List<Position>way)
-        //{
-        //    Position next;
-        //    int method;
-
-        //    return (next, method);
-        //}
-
+        /// <summary>
+        /// finds the shortest way to the target or the way to the first uncleaned area towards target
+        /// </summary>
+        /// <param name="targetPosition"></param>
+        /// <returns></returns>
         private List<Position> FindShortestWayTo(Position targetPosition)
         {
             List<List<Position>> shortestWays = new List<List<Position>>();
 
             Dictionary<Position, int> wayWithMethods = new Dictionary<Position, int>();
             wayWithMethods.Add(MapOwn.PositionRC, -1);
-            
 
-            List<Position> way = new List<Position> { MapOwn.PositionRC };
-            List<int> methods = new List<int>() { -1 };
-
-            while (way.Count != 0)
+            while (wayWithMethods.Count != 0)
             {
                 bool success = false;
-                Position last = way.Last();
+                Position last = wayWithMethods.Last().Key;
                 Position next;
 
 
@@ -185,41 +178,53 @@ namespace Challenge
                     evaluateNext();
                 }
 
-                //stored ways are changing as way changes
-                if (success && way.Last().Equals(targetPosition))
+                last = wayWithMethods.Last().Key;
+                if (success &&
+                    (last.Equals(targetPosition) ||
+                    success && MapOwn.CoordinateFigureByPosition(last).Equals((int)Figure.UncleanedArea))) //if an uncleanedArea entered before target, then do not reach target
                 {
                     if (shortestWays.Count > 0 &&
-                        shortestWays[0].Count > way.Count)
+                        shortestWays[0].Count > wayWithMethods.Count)
                     {
                         //store ways with minimum length
                         shortestWays.Clear();
                     }
-                    storeNewWay(way);
-                    removeLasts();
-                    void storeNewWay(List<Position> newWay)
+                    //store found way
+                    List<Position> newWay = new List<Position>();
+                    foreach (var posAndMethod in wayWithMethods)
                     {
-                        List<Position> w = newWay;
-                        shortestWays.Add(w);
+                        newWay.Add(posAndMethod.Key);
                     }
+                    shortestWays.Add(newWay);
+
+                    removeLast();
+
+                }
+                else if (success && shortestWays.Count > 0 &&
+                    shortestWays[0].Count == wayWithMethods.Count &&
+                    last != targetPosition)
+                {
+                    removeLast();
                 }
                 else if (!success)
                 {
-                    removeLasts();
+                    removeLast();
                 }
 
-                void removeLasts()
+                void removeLast()
                 {
-                    way.RemoveAt(way.Count - 1);
-                    methods.Remove(methods.Count - 1);
+                    wayWithMethods.Remove(wayWithMethods.Last().Key);
                 }
+
+
 
                 void evaluateNext()
                 {
-                    if (CheckIfFree(MapOwn, next, (int)Figure.Wall))
+                    if (CheckIfFree(MapOwn, next, (int)Figure.Wall) && !wayWithMethods.ContainsKey(next))
                     {
                         if (shortestWays.Count > 0)
                         {
-                            if (way.Count < shortestWays[0].Count)
+                            if (wayWithMethods.Count < shortestWays[0].Count)
                             {
                                 storeAndSetSuccess();
                             }
@@ -232,9 +237,8 @@ namespace Challenge
 
                     void storeAndSetSuccess()
                     {
-                        way.Add(next);
-                        methods[methods.Count - 1] = methodNumber;
-                        methods.Add(-1);
+                        wayWithMethods[wayWithMethods.Last().Key] = methodNumber;
+                        wayWithMethods.Add(next, -1);
 
                         success = true;
                     }
@@ -242,21 +246,36 @@ namespace Challenge
 
                 bool ongoin()
                 {
-                    return !success && methods.Last() <= methodNumber;
+                    return !success && wayWithMethods.Values.Last() < methodNumber;
                 }
 
             }
-            //return the one with less cleaned area
+
+            if (shortestWays.Count > 1)
+            {
+                ;
+            }
+            
             return shortestWays[0];
         }
 
+        /// <summary>
+        /// if no uncleaned zones found retuns an empty List
+        /// </summary>
+        /// <returns></returns>
         private List<Position> FindNearestUncleanedZones()
         {
             int[][] mapCoords = MapOwn.Coordinates;
             Position posRC = MapOwn.PositionRC;
 
-            int maxLength = mapCoords.Length > mapCoords[0].Length ? mapCoords.Length : mapCoords[0].Length;
-            List<Position> closestPoints = new List<Position>();
+            int xMax = 0;
+            foreach (int[] x in mapCoords)
+            {
+                if (x.Length > xMax) xMax = x.Length;
+            }
+            int maxLength = mapCoords.Length > xMax ? mapCoords.Length : xMax;
+
+            HashSet<Position> closestPoints = new HashSet<Position>();
             int i = 1;
 
             while (closestPoints.Count == 0 && i < maxLength)
@@ -381,7 +400,7 @@ namespace Challenge
                 i++;
             }
 
-            return closestPoints.Count == 0 ? null : closestPoints;
+            return closestPoints.ToList();
         }
 
 

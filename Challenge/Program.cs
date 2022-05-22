@@ -23,14 +23,16 @@ namespace Challenge
         public void Start()
         {
             Rnd = new Random();
-            Map MapExternal = new Map(TwoRooms(15, 20, 10, 5), new Position(1,1));
+            //Map MapExternal = new Map(TwoRooms(15, 20, 10, 5), new Position(1, 1));
+            Map MapExternal = new Map(MapCoordinatesExtra(), new Position(1, 1));
             //MapExternal.PutOnMapRandom();
             RoboCleaner rc = new RoboCleaner(MapExternal);
             rc.StartCleaning();
+            Console.WriteLine("\ndone!");
             
             
         }
-        public int[][] MapCoordinates1()
+        public int[][] MapCoordinatesExtra()
         {
             int[][] Map;
             int Rows = 14;
