@@ -467,6 +467,55 @@ namespace Challenge
 
         }
 
+
+        private void SetHeadingToDetectRoomEdges()
+        {
+            void turnRightWhileFrontNotFree()
+            {
+                int i = 0;
+                while (i < 3 && WallOnTheFront())
+                {
+                    TurnRightRC();
+                    RecordBarrierOnTheLeft();
+                    i++;
+                }
+            }
+
+            //find start direction
+            //before the first move Robo is heading up
+            if (!WallOnTheLeft() && !WallOnTheFront() && !WallOnTheRight())
+            {
+                TurnLeftRC();
+                RecordBarrierOnTheLeft();
+            }
+            else if (WallOnTheRight())
+            {
+                TurnRightRC();
+                RecordBarrierOnTheLeft();
+                turnRightWhileFrontNotFree();
+            }
+            else
+            {
+                RecordBarrierOnTheLeft();
+                turnRightWhileFrontNotFree();
+            }
+        }
+
+        /// <summary>
+        /// returns null if no barriers found
+        /// </summary>
+        /// <param name="basePosition"></param>
+        /// <returns></returns>
+        Position RecordBarrierOnTheLeft(Position basePosition)
+        {
+            Position barrier = null;
+            if (WallOnTheLeft())
+            {
+                barrier = MapExternal.AreaOnTheLeft(HeadingRC, basePosition);
+            }
+            return barrier;
+        }
+
         public (List<Position> cleanedPath, List<Position> barriers) DetectRoomEdges()
         {
             List<Position> cleanedPathCoordinates = new List<Position>();
@@ -474,17 +523,6 @@ namespace Challenge
             Position PositionDetectingRC = new Position(0, 0);
 
             DisplayMap(MapExternal);
-
-            void turnRightWhileFrontNotFree()
-            {
-                int i = 0;
-                while (i < 3 && WallOnTheFront())
-                {
-                    TurnRightRC();
-                    RecordBarrier();
-                    i++;
-                }
-            }
             void RecordBarrier()
             {
                 if (WallOnTheLeft())
@@ -498,24 +536,7 @@ namespace Challenge
             }
 
 
-            //find start direction
-            //before the first move Robo is heading up
-            if (!WallOnTheLeft() && !WallOnTheFront() && !WallOnTheRight())
-            {
-                TurnLeftRC();
-                RecordBarrier();
-            }
-            else if (WallOnTheRight())
-            {
-                TurnRightRC();
-                RecordBarrier();
-                turnRightWhileFrontNotFree();
-            }
-            else
-            {
-                RecordBarrier();
-                turnRightWhileFrontNotFree();
-            }
+            SetHeadingToDetectRoomEdges();
 
             RecordPath();
 
