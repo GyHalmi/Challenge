@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace Challenge
 {
+    enum Heading { Up = 3, Down = 4, Left = 5, Right = 6 };
+
     class RoboCleaner
     {
-        public static Heading defaultHeadingUP = Heading.Up;
         public Heading HeadingRC { get; set; }
         public Map MapExternal { get; set; }
         public Map MapOwn { get; set; }
@@ -18,245 +19,32 @@ namespace Challenge
         public RoboCleaner(Map mapExternal)
         {
             MapExternal = mapExternal;
-            HeadingRC = defaultHeadingUP;
-            MapOwn = new Map(Map.initMap(10, 10), new Position(0, 0));
-            MapRefreshTime = 1000;
+            HeadingRC = Heading.Up;
+            MapOwn = new Map(Map.initCoordinates(10, 10), new Position(0, 0));
+            MapRefreshTime = 600;
         }
 
-
-        public void MoveAndUpdatePositonOnBothMap()
+        public void CleanTheHouse()
         {
-            MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapOwn.PositionRC));
-        }
-        public void StartCleaning()
-        {
+            DisplayMap(MapExternal);
             MapOwn = CreateMap();
+            DisplayTwoMaps(MapExternal, MapOwn);
 
             List<Position> nearestUncleanedZones = FindNearestUncleanedZones();
 
             while (nearestUncleanedZones.Count > 0)
             {
                 List<List<Position>> possibleWays = new List<List<Position>>();
-                foreach (Position pos in nearestUncleanedZones)
-                {
-                    possibleWays.Add(FindShortestWayTo(pos));
-                }
+                nearestUncleanedZones.ForEach(pos => possibleWays.Add(FindShortestWayTo(pos)));
 
                 List<Position> shortestWay = possibleWays.Aggregate((stored, next) => stored.Count > next.Count ? next : stored);
-                MoveOnWay(shortestWay);
-                CleanActualZone();
+
+                bool barrierFound = !MoveOnWay(shortestWay);
+                if (!barrierFound) barrierFound |= !CleanActualZone();
+                if (barrierFound) DetectAndAddBarrierToOwnMap();
+
                 nearestUncleanedZones = FindNearestUncleanedZones();
             }
-
-        }
-
-        private void MoveOnWay(List<Position> way)
-        {
-            int i = 1;
-
-            while (i < way.Count && CheckIfFree(MapExternal, way[i], (int)Figure.Wall))
-            {
-                Position p = way[i];
-                if (MapOwn.AreaOnTheLeft(HeadingRC).Equals(p))
-                {
-                    TurnLeftRC();
-                }
-                else if (MapOwn.AreaOnTheFront(HeadingRC).Equals(p))
-                {
-                    ;
-                }
-                else if (MapOwn.AreaOnTheRight(HeadingRC).Equals(p))
-                {
-                    TurnRightRC();
-                }
-                else
-                {
-                    TurnRightRC();
-                    TurnRightRC();
-                }
-
-                RecordBarriersAround();
-                MoveAndUpdatePositonOnBothMap();
-
-                DisplayTwoMaps(MapExternal, MapOwn);
-                i++;
-            }
-
-        }
-
-        private void RecordBarriersAround()
-        {
-            int figWall = (int)Figure.Wall;
-
-            if (WallOnTheLeft())
-            {
-                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheLeft(HeadingRC), figWall);
-            }
-            if (WallOnTheFront())
-            {
-                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheFront(HeadingRC), figWall);
-            }
-            if (WallOnTheRight())
-            {
-                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheRight(HeadingRC), figWall);
-            }
-
-        }
-        /// <summary>
-        /// finds the shortest way to the target or the way to the first uncleaned area towards target
-        /// </summary>
-        /// <param name="targetPosition"></param>
-        /// <returns></returns>
-        private List<Position> FindShortestWayTo(Position targetPosition)
-        {
-            List<List<Position>> shortestWays = new List<List<Position>>();
-
-            Dictionary<Position, int> wayWithMethods = new Dictionary<Position, int>();
-            wayWithMethods.Add(MapOwn.PositionRC, -1);
-
-            while (wayWithMethods.Count != 0)
-            {
-                bool success = false;
-                Position last = wayWithMethods.Last().Key;
-                Position next;
-
-
-                //decreaseDistanceX
-                int methodNumber = 0;
-                if (ongoin() && last.X != targetPosition.X)
-                {
-                    next = last.X > targetPosition.X ? new Position(last.Y, last.X - 1) : new Position(last.Y, last.X + 1);
-                    evaluateNext();
-                }
-
-                //decreaseDistanceY
-                methodNumber = 1;
-                if (ongoin() && last.Y != targetPosition.Y)
-                {
-                    next = last.Y > targetPosition.Y ? new Position(last.Y - 1, last.X) : new Position(last.Y + 1, last.X);
-                    evaluateNext();
-                }
-
-                //increaseDistanceX
-                methodNumber = 2;
-                if (ongoin() && last.X != targetPosition.X)
-                {
-                    next = last.X > targetPosition.X ? new Position(last.Y, last.X + 1) : new Position(last.Y, last.X - 1);
-                    evaluateNext();
-                }
-                methodNumber = 3; //increase direction right
-                if (ongoin() && last.X == targetPosition.X)
-                {
-                    next = last.Right();
-                    evaluateNext();
-                }
-                methodNumber = 4; //increase direction left
-                if (ongoin() && last.X == targetPosition.X)
-                {
-                    next = last.Left();
-                    evaluateNext();
-                }
-
-                //increaseDistanceY
-                methodNumber = 6;
-                if (ongoin() && last.Y != targetPosition.Y)
-                {
-                    next = last.Y > targetPosition.Y ? new Position(last.Y + 1, last.X) : new Position(last.Y - 1, last.X);
-                    evaluateNext();
-                }
-                methodNumber = 7; //increase direction up
-                if (ongoin() && last.Y == targetPosition.Y)
-                {
-                    next = last.Up();
-                    evaluateNext();
-                }
-                methodNumber = 8; //increase direction down
-                if (ongoin() && last.Y == targetPosition.Y)
-                {
-                    next = last.Down();
-                    evaluateNext();
-                }
-
-                last = wayWithMethods.Last().Key;
-                if (success &&
-                    (last.Equals(targetPosition) ||
-                    success && MapOwn.CoordinateFigureByPosition(last).Equals((int)Figure.UncleanedArea))) //if an uncleanedArea entered before target, then do not reach target
-                {
-                    if (shortestWays.Count > 0 &&
-                        shortestWays[0].Count > wayWithMethods.Count)
-                    {
-                        //store ways with minimum length
-                        shortestWays.Clear();
-                    }
-                    //store found way
-                    List<Position> newWay = new List<Position>();
-                    foreach (var posAndMethod in wayWithMethods)
-                    {
-                        newWay.Add(posAndMethod.Key);
-                    }
-                    shortestWays.Add(newWay);
-
-                    removeLast();
-
-                }
-                else if (success && shortestWays.Count > 0 &&
-                    shortestWays[0].Count == wayWithMethods.Count &&
-                    last != targetPosition)
-                {
-                    removeLast();
-                }
-                else if (!success)
-                {
-                    removeLast();
-                }
-
-                void removeLast()
-                {
-                    wayWithMethods.Remove(wayWithMethods.Last().Key);
-                }
-
-
-
-                void evaluateNext()
-                {
-                    if (CheckIfFree(MapOwn, next, (int)Figure.Wall) && !wayWithMethods.ContainsKey(next))
-                    {
-                        if (shortestWays.Count > 0)
-                        {
-                            if (wayWithMethods.Count < shortestWays[0].Count)
-                            {
-                                storeAndSetSuccess();
-                            }
-                        }
-                        else
-                        {
-                            storeAndSetSuccess();
-                        }
-                    }
-
-                    void storeAndSetSuccess()
-                    {
-                        wayWithMethods[wayWithMethods.Last().Key] = methodNumber;
-                        wayWithMethods.Add(next, -1);
-
-                        success = true;
-                    }
-                }
-
-                bool ongoin()
-                {
-                    return !success && wayWithMethods.Values.Last() < methodNumber;
-                }
-
-            }
-
-            if (shortestWays.Count > 1)
-            {
-                ;
-            }
-
-            return shortestWays[0];
         }
 
         /// <summary>
@@ -289,7 +77,7 @@ namespace Challenge
                 {
 
                     /*      p
-                     *    xxxxx
+                     *     xxx
                      */
                     try
                     {
@@ -370,7 +158,7 @@ namespace Challenge
 
                     /*   
                      *      x
-                     *     px
+                     *    p x
                      *      x
                      */
                     try
@@ -402,107 +190,341 @@ namespace Challenge
 
             return closestPoints.ToList();
         }
-
-
-
-        private void CleanActualZone()
+        /// <summary>
+        /// finds the shortest way to the target or the way to the first uncleaned area towards target
+        /// </summary>
+        /// <param name="targetPosition"></param>
+        /// <returns></returns>
+        private List<Position> FindShortestWayTo(Position targetPosition)
         {
-            SetHeadingToLongestWay();
+            List<List<Position>> shortestWays = new List<List<Position>>();
 
+            Dictionary<Position, int> wayWithMethods = new Dictionary<Position, int>();
+            wayWithMethods.Add(MapOwn.PositionRC, -1);
+
+            while (wayWithMethods.Count != 0)
+            {
+                bool success = false;
+                Position last = wayWithMethods.Last().Key;
+                Position next;
+
+
+                //decreaseDistanceX
+                int methodNumber = 0;
+                if (ongoin() && last.X != targetPosition.X)
+                {
+                    next = last.X > targetPosition.X ? new Position(last.Y, last.X - 1) : new Position(last.Y, last.X + 1);
+                    evaluateNext();
+                }
+
+                //decreaseDistanceY
+                methodNumber = 1;
+                if (ongoin() && last.Y != targetPosition.Y)
+                {
+                    next = last.Y > targetPosition.Y ? new Position(last.Y - 1, last.X) : new Position(last.Y + 1, last.X);
+                    evaluateNext();
+                }
+
+                //increaseDistanceX
+                methodNumber = 2;
+                if (ongoin() && last.X != targetPosition.X)
+                {
+                    next = last.X > targetPosition.X ? new Position(last.Y, last.X + 1) : new Position(last.Y, last.X - 1);
+                    evaluateNext();
+                }
+                methodNumber = 3; //increase direction right
+                if (ongoin() && last.X == targetPosition.X)
+                {
+                    next = last.Right();
+                    evaluateNext();
+                }
+                methodNumber = 4; //increase direction left
+                if (ongoin() && last.X == targetPosition.X)
+                {
+                    next = last.Left();
+                    evaluateNext();
+                }
+
+                //increaseDistanceY
+                methodNumber = 6;
+                if (ongoin() && last.Y != targetPosition.Y)
+                {
+                    next = last.Y > targetPosition.Y ? new Position(last.Y + 1, last.X) : new Position(last.Y - 1, last.X);
+                    evaluateNext();
+                }
+                methodNumber = 7; //increase direction up
+                if (ongoin() && last.Y == targetPosition.Y)
+                {
+                    next = last.Up();
+                    evaluateNext();
+                }
+                methodNumber = 8; //increase direction down
+                if (ongoin() && last.Y == targetPosition.Y)
+                {
+                    next = last.Down();
+                    evaluateNext();
+                }
+
+                last = wayWithMethods.Last().Key;
+
+                if (success &&
+                    (last.Equals(targetPosition) ||
+                     MapOwn.CoordinateFigureByPosition(last).Equals((int)Figure.UncleanedArea))) //if an uncleanedArea entered before target, then do not reach target
+                {
+                    if (shortestWays.Count > 0 &&
+                        shortestWays[0].Count > wayWithMethods.Count)
+                    {
+                        //store ways with minimum length
+                        shortestWays.Clear();
+                    }
+                    //store found way
+                    List<Position> newWay = new List<Position>();
+                    foreach (var posAndMethod in wayWithMethods)
+                    {
+                        newWay.Add(posAndMethod.Key);
+                    }
+                    shortestWays.Add(newWay);
+
+                    removeLast();
+                }
+                else if (success && shortestWays.Count > 0 &&
+                    shortestWays[0].Count == wayWithMethods.Count &&
+                    last != targetPosition)
+                {
+                    removeLast();
+                }
+                else if (!success)
+                {
+                    removeLast();
+                }
+
+                void removeLast()
+                {
+                    wayWithMethods.Remove(wayWithMethods.Last().Key);
+                }
+
+                void evaluateNext()
+                {
+
+                    if (MapOwn.CoordinateFigureByPosition(next) != (int)Figure.Wall && !wayWithMethods.ContainsKey(next))
+                    {
+                        if (shortestWays.Count <= 0 ||
+                            (shortestWays.Count > 0 && wayWithMethods.Count < shortestWays[0].Count))
+                        {
+                            wayWithMethods[wayWithMethods.Last().Key] = methodNumber;
+                            wayWithMethods.Add(next, -1);
+
+                            success = true;
+                        }
+                    }
+                }
+
+                bool ongoin()
+                {
+                    return !success && wayWithMethods.Values.Last() < methodNumber;
+                }
+
+            }
+
+            int shortesIndex = 0;
+            int min = CountTurnsOnWay(shortestWays[shortesIndex]);
+
+            for (int i = 1; i < shortestWays.Count; i++)
+            {
+                if (CountTurnsOnWay(shortestWays[i]) < min)
+                {
+                    shortesIndex = i;
+                    min = CountTurnsOnWay(shortestWays[i]);
+                }
+            }
+            return shortestWays[shortesIndex];
+
+        }
+        private int CountTurnsOnWay(List<Position> way)
+        {
+            int turns = 0;
+            int heading = (int)HeadingRC;
+
+            for (int i = 1; i < way.Count; i++)
+            {
+                Position robo = way[i - 1];
+                Position next = way[i];
+
+                if (MapOwn.AreaOnTheLeft(HeadingRC, robo).Equals(next))
+                {
+                    TurnLeftRC();
+                    turns++;
+                }
+                else if (MapOwn.AreaOnTheFront(HeadingRC, robo).Equals(next))
+                {
+                    ;
+                }
+                else if (MapOwn.AreaOnTheRight(HeadingRC, robo).Equals(next))
+                {
+                    TurnRightRC();
+                    turns++;
+                }
+                else
+                {
+                    TurnRightRC();
+                    turns++;
+                    TurnRightRC();
+                    turns++;
+                }
+            }
+
+            HeadingRC = (Heading)heading;
+            return turns;
+        }
+        /// <summary>
+        /// returns true if the end of the way is reached, else stops before wall and returns false
+        /// </summary>
+        /// <param name="way"></param>
+        private bool MoveOnWay(List<Position> way)
+        {
+            int i = 1;
+
+            while (i < way.Count && MapExternal.CoordinateFigureByPosition(way[i]) != ((int)Figure.Wall))
+            {
+                Position p = way[i];
+                if (MapOwn.AreaOnTheLeft(HeadingRC).Equals(p))
+                {
+                    TurnLeftRC();
+                }
+                else if (MapOwn.AreaOnTheFront(HeadingRC).Equals(p))
+                {
+                    ;
+                }
+                else if (MapOwn.AreaOnTheRight(HeadingRC).Equals(p))
+                {
+                    TurnRightRC();
+                }
+                else
+                {
+                    TurnRightRC();
+                    TurnRightRC();
+                }
+
+                MoveAndUpdatePositonOnBothMap();
+                DisplayTwoMaps(MapExternal, MapOwn);
+                i++;
+            }
+
+            return way.Count >= i;
+
+        }
+        /// <summary>
+        /// returns true if the zone is cleaned, false if cleaning cannot go on beacause of a wall
+        /// </summary>
+        /// <returns></returns>
+        private bool CleanActualZone()
+        {
             do
             {
                 RecordBarriersAround();
-
-                if (!WallOnTheFront() && !CleanedOnTheFront())
+                if (!WallOnTheLeft() && !CleanedOnTheLeft())
                 {
-                    MoveAndUpdatePositonOnBothMap();
+                    TurnLeftRC();
+                }
+                else if (!WallOnTheFront() && !CleanedOnTheFront())
+                {
+                    ;
                 }
                 else if (!WallOnTheRight() && !CleanedOnTheRight())
                 {
                     TurnRightRC();
-                    MoveAndUpdatePositonOnBothMap();
-                    TurnRightRC();
                 }
-                else if (!WallOnTheLeft() && !CleanedOnTheLeft())
-                {
-                    TurnLeftRC();
-                    MoveAndUpdatePositonOnBothMap();
-                    TurnLeftRC();
-                }
+                MoveAndUpdatePositonOnBothMap();
                 DisplayTwoMaps(MapExternal, MapOwn);
 
             } while (!WallOnTheFront() && !CleanedOnTheFront() ||
                     !WallOnTheLeft() && !CleanedOnTheLeft() ||
-                  !WallOnTheRight() && !CleanedOnTheRight());
+                    !WallOnTheRight() && !CleanedOnTheRight());
+
+            return CleanedOnTheFront() && CleanedOnTheLeft() && CleanedOnTheRight();
         }
-
-        private void SetHeadingToLongestWay()
+        private void RecordBarriersAround()
         {
-            int startHeading = (int)HeadingRC;
-            Dictionary<Heading, int> freeWayDistance = new Dictionary<Heading, int>();
+            int figWall = (int)Figure.Wall;
 
-            Position pos = MapOwn.PositionRC;
-            int startY = pos.Y;
-            int startX = pos.X;
-
-            int cnt;
-            int[] notAllowed = new int[] { (int)Figure.Wall, (int)Figure.CleanedArea };
-
-            do
+            if (WallOnTheLeft())
             {
-                cnt = 0;
-                pos = new Position(startY, startX);
-                while (CheckIfFree(MapOwn, MoveForwardRC(pos), notAllowed))
-                {
-                    pos = MoveForwardRC(pos);
-                    cnt++;
-                }
-                Position p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
-                freeWayDistance.Add(HeadingRC, cnt);
-                TurnRightRC();
-
-            } while (startHeading != (int)HeadingRC);
-
-            HeadingRC = freeWayDistance.Aggregate((stored, next) => stored.Value > next.Value ? stored : next).Key;
-            //MapOwn.PutRoboCleanerOnMap(new Position(startY, startX), HeadingRC);
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheLeft(HeadingRC), figWall);
+            }
+            if (WallOnTheFront())
+            {
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheFront(HeadingRC), figWall);
+            }
+            if (WallOnTheRight())
+            {
+                MapOwn.RefreshCoordinate(MapOwn.AreaOnTheRight(HeadingRC), figWall);
+            }
 
         }
-        private void SetHeadingToDetectRoomEdges()
+        public void DetectAndAddBarrierToOwnMap()
         {
-            void turnRightWhileFrontNotFree()
+            Map barrierMap = CreateMap();
+            DisplayTwoMaps(MapExternal, barrierMap);
+
+            int shiftY = MapOwn.PositionRC.Y - barrierMap.PositionRC.Y;
+            int shiftX = MapOwn.PositionRC.X - barrierMap.PositionRC.X;
+
+            for (int y = 0; y < barrierMap.Coordinates.Length; y++)
             {
-                int i = 0;
-                while (i < 3 && WallOnTheFront())
+                for (int x = 0; x < barrierMap.Coordinates[y].Length; x++)
                 {
-                    TurnRightRC();
-                    i++;
+                    Position p = new Position(y, x);
+                    int figure = barrierMap.CoordinateFigureByPosition(p);
+                    if (figure != 0) MapOwn.RefreshCoordinate(new Position(p.Y + shiftY, p.X + shiftX), figure);
                 }
             }
+            DisplayTwoMaps(MapExternal, MapOwn);
 
-            //find start direction
 
-            //before the first move Robo is heading up
-            HeadingRC = Heading.Up; // maybe not necessary
-
-            if (!WallOnTheLeft() && !WallOnTheFront() && !WallOnTheRight())
-            {
-                TurnLeftRC();
-            }
-            else if (WallOnTheRight())
-            {
-                TurnRightRC();
-                turnRightWhileFrontNotFree();
-            }
-            else
-            {
-                turnRightWhileFrontNotFree();
-            }
         }
-        private void SetHeadingToDetectBarriers()
+
+
+        private Map CreateMap()
         {
-            SetHeadingToDetectRoomEdges();
-            TurnRightRC();
-            TurnRightRC();
+            SetHeadingToStartEdgeDetection();
+            (List<Position> cleanedPath, List<Position> barriers) edgeDetection = DetectEdges();
+
+            //measure map dimensons /array lenghts
+            (int minimum, int maximum) barrierYMinMax = YMinMax(edgeDetection.barriers);
+            (int minimum, int maximum) barrierXMinMax = XMinMax(edgeDetection.barriers);
+            (int minimum, int maximum) pathYMinMax = YMinMax(edgeDetection.cleanedPath);
+            (int minimum, int maximum) pathXMinMax = XMinMax(edgeDetection.cleanedPath);
+
+            int yMin = barrierYMinMax.minimum < pathYMinMax.minimum ? barrierYMinMax.minimum : pathYMinMax.minimum;
+            int yMax = barrierYMinMax.maximum > pathYMinMax.maximum ? barrierYMinMax.maximum : pathYMinMax.maximum;
+            int xMin = barrierXMinMax.minimum < pathXMinMax.minimum ? barrierXMinMax.minimum : pathXMinMax.minimum;
+            int xMax = barrierXMinMax.maximum > pathXMinMax.maximum ? barrierXMinMax.maximum : pathXMinMax.maximum;
+
+            Map newMap = new Map(Map.initCoordinates(yMax - yMin + 1, xMax - xMin + 1), new Position(0, 0));
+            DisplayTwoMaps(MapExternal, newMap);
+
+            Position shiftCoordinate(Position p)
+            {
+                return new Position(p.Y - yMin, p.X - xMin);
+            }
+
+            //shift detected coordinates
+            (List<Position> cleanedPath, List<Position> barriers) shiftedCoordinates;
+            shiftedCoordinates.barriers = edgeDetection.barriers.Select(p => shiftCoordinate(p)).ToList();
+            shiftedCoordinates.cleanedPath = edgeDetection.cleanedPath.Select(p => shiftCoordinate(p)).ToList();
+
+            //add barriers and cleanened path to newMap
+            shiftedCoordinates.barriers.ForEach(p => newMap.RefreshCoordinate(p, (int)Figure.Wall));
+            shiftedCoordinates.cleanedPath.ForEach(p => newMap.RefreshCoordinate(p, (int)Figure.CleanedArea));
+
+            //DisplayTwoMaps(MapExternal, newMap);
+
+            FillMapWhithUnreachableWalls(newMap, shiftedCoordinates);
+
+            //put robo on the map
+            newMap.PutRoboCleanerOnMap(shiftedCoordinates.cleanedPath.Last(), HeadingRC);
+
+            return newMap;
         }
         /// <summary>
         /// set heading before detection
@@ -582,33 +604,7 @@ namespace Challenge
 
             return (cleanedPathCoordinates, barriersCoordinates.ToList());
         }
-        public SortedDictionary<int, List<int>> PositionListToSortedDictionary(List<Position> positions)
-        {
-            //sort Y coordinates
-            SortedDictionary<int, List<int>> sortedCoordinates = new SortedDictionary<int, List<int>>();
-
-            for (int i = 0; i < positions.Count; i++)
-            {
-                int key = positions[i].Y;
-                int value = positions[i].X;
-                if (sortedCoordinates.ContainsKey(key))
-                {
-                    sortedCoordinates[key].Add(value);
-                }
-                else
-                {
-                    sortedCoordinates.Add(key, new List<int> { value });
-                }
-            }
-            // sort X coordinates
-            foreach (var item in sortedCoordinates)
-            {
-                item.Value.Sort();
-            }
-
-            return sortedCoordinates;
-        }
-        private void fillMapWhithUnreachableWalls(Map map, (List<Position> cleandedPath, List<Position> barriers) pathAndBarriers)
+        private void FillMapWhithUnreachableWalls(Map map, (List<Position> cleandedPath, List<Position> barriers) pathAndBarriers)
         {
             Dictionary<Position, bool> checkedPositions = new Dictionary<Position, bool>();
             pathAndBarriers.barriers.ForEach(p => checkedPositions.Add(p, false));
@@ -645,113 +641,44 @@ namespace Challenge
             }
 
         }
-        private Map CreateMap()
+        private (int min, int max) YMinMax(List<Position> positions)
         {
-            SetHeadingToDetectRoomEdges();
-            (List<Position> cleanedPath, List<Position> barriers) edgeDetection = DetectEdges();
-
-            //measure map dimensons /array lenghts
-            (int min, int max) yMinMax(List<Position> positions)
-            {
-                int yMini = positions.Aggregate((min, next) => next.Y < min.Y ? next : min).Y;
-                int yMaxi = positions.Aggregate((max, next) => next.Y > max.Y ? next : max).Y;
-                return (yMini, yMaxi);
-            }
-            (int min, int max) xMinMax(List<Position> positions)
-            {
-                int xMini = positions.Aggregate((min, next) => next.X < min.X ? next : min).X;
-                int xMaxi = positions.Aggregate((max, next) => next.X > max.X ? next : max).X;
-                return (xMini, xMaxi);
-            }
-
-            (int minimum, int maximum) barrierYMinMax = yMinMax(edgeDetection.barriers);
-            (int minimum, int maximum) barrierXMinMax = xMinMax(edgeDetection.barriers);
-            (int minimum, int maximum) pathYMinMax = yMinMax(edgeDetection.cleanedPath);
-            (int minimum, int maximum) pathXMinMax = xMinMax(edgeDetection.cleanedPath);
-
-            int yMin = barrierYMinMax.minimum < pathYMinMax.minimum ? barrierYMinMax.minimum : pathYMinMax.minimum;
-            int yMax = barrierYMinMax.maximum > pathYMinMax.maximum ? barrierYMinMax.maximum : pathYMinMax.maximum;
-            int xMin = barrierXMinMax.minimum < pathXMinMax.minimum ? barrierXMinMax.minimum : pathXMinMax.minimum;
-            int xMax = barrierXMinMax.maximum > pathXMinMax.maximum ? barrierXMinMax.maximum : pathXMinMax.maximum;
-
-
-
-            Map newMap = new Map(Map.initMap(yMax - yMin + 1, xMax - xMin + 1), new Position(0, 0));
-            DisplayTwoMaps(MapExternal, newMap);
-
-
-            //add barriers and cleanened path to newMap
-
-            Position shiftCoordinate(Position p)
-            {
-                return new Position(p.Y - yMin, p.X - xMin);
-            }
-
-            //shift detected coordinates
-            (List<Position> cleanedPath, List<Position> barriers) shiftedCoordinates;
-            shiftedCoordinates.barriers = edgeDetection.barriers.Select(p => shiftCoordinate(p)).ToList();
-            shiftedCoordinates.cleanedPath = edgeDetection.cleanedPath.Select(p => shiftCoordinate(p)).ToList();
-
-            shiftedCoordinates.barriers.ForEach(p => newMap.RefreshCoordinate(p, (int)Figure.Wall));
-            shiftedCoordinates.cleanedPath.ForEach(p => newMap.RefreshCoordinate(p, (int)Figure.CleanedArea));
-
-            DisplayTwoMaps(MapExternal, newMap);
-
-            fillMapWhithUnreachableWalls(newMap, shiftedCoordinates);
-
-            DisplayTwoMaps(MapExternal, newMap);
-
-            //put robo on the map
-            //newMap.PutRoboCleanerOnMap(new Position(0 - yMin, 0 - xMin), HeadingRC);
-            newMap.PutRoboCleanerOnMap(shiftedCoordinates.cleanedPath.Last(), HeadingRC);
-            DisplayTwoMaps(MapExternal, newMap);
-
-            return newMap;
+            int yMini = positions.Aggregate((min, next) => next.Y < min.Y ? next : min).Y;
+            int yMaxi = positions.Aggregate((max, next) => next.Y > max.Y ? next : max).Y;
+            return (yMini, yMaxi);
+        }
+        private (int min, int max) XMinMax(List<Position> positions)
+        {
+            int xMini = positions.Aggregate((min, next) => next.X < min.X ? next : min).X;
+            int xMaxi = positions.Aggregate((max, next) => next.X > max.X ? next : max).X;
+            return (xMini, xMaxi);
         }
 
 
         private bool WallOnTheLeft()
         {
-            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheLeft(HeadingRC), (int)Figure.Wall);
+            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheLeft(HeadingRC)).Equals((int)Figure.Wall);
         }
         private bool WallOnTheFront()
         {
-            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheFront(HeadingRC), (int)Figure.Wall);
+            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheFront(HeadingRC)).Equals((int)Figure.Wall);
         }
         private bool WallOnTheRight()
         {
-            return !CheckIfFree(MapExternal, MapExternal.AreaOnTheRight(HeadingRC), (int)Figure.Wall);
+            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheRight(HeadingRC)).Equals((int)Figure.Wall);
         }
 
         private bool CleanedOnTheLeft()
         {
-            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheLeft(HeadingRC), (int)Figure.CleanedArea);
+            return MapOwn.CoordinateFigureByPosition(MapOwn.AreaOnTheLeft(HeadingRC)).Equals((int)Figure.CleanedArea);
         }
         private bool CleanedOnTheFront()
         {
-            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheFront(HeadingRC), (int)Figure.CleanedArea);
+            return MapOwn.CoordinateFigureByPosition(MapOwn.AreaOnTheFront(HeadingRC)).Equals((int)Figure.CleanedArea);
         }
         private bool CleanedOnTheRight()
         {
-            return !CheckIfFree(MapOwn, MapOwn.AreaOnTheRight(HeadingRC), (int)Figure.CleanedArea);
-        }
-
-        private bool CheckIfFree(Map map, Position positionToCheck, int figureNotAllowed)
-        {
-            return map.CoordinateFigureByPosition(positionToCheck) != figureNotAllowed;
-        }
-        private bool CheckIfFree(Map map, Position positionToCheck, int[] figuresNotAllowed)
-        {
-            bool free = true;
-
-            int i = 0;
-            do
-            {
-                free = map.CoordinateFigureByPosition(positionToCheck) != figuresNotAllowed[i];
-                i++;
-            } while (i < figuresNotAllowed.Length && free);
-
-            return free;
+            return MapOwn.CoordinateFigureByPosition(MapOwn.AreaOnTheRight(HeadingRC)).Equals((int)Figure.CleanedArea);
         }
 
         private void TurnLeftRC()
@@ -794,6 +721,74 @@ namespace Challenge
                     //    break;
             }
         }
+        private void SetHeadingToLongestWay()
+        {
+            int startHeading = (int)HeadingRC;
+            Dictionary<Heading, int> freeWayDistance = new Dictionary<Heading, int>();
+
+            Position pos = MapOwn.PositionRC;
+            int startY = pos.Y;
+            int startX = pos.X;
+
+            int cnt;
+            int[] notAllowed = new int[] { (int)Figure.Wall, (int)Figure.CleanedArea };
+
+            do
+            {
+                cnt = 0;
+                pos = new Position(startY, startX);
+
+                while (nextPosFigure() != (int)Figure.Wall && nextPosFigure() != (int)Figure.CleanedArea)
+                {
+                    pos = MoveForwardRC(pos);
+                    cnt++;
+                }
+
+                int nextPosFigure()
+                {
+                    return MapOwn.CoordinateFigureByPosition(MoveForwardRC(pos));
+                }
+                Position p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
+                freeWayDistance.Add(HeadingRC, cnt);
+                TurnRightRC();
+
+            } while (startHeading != (int)HeadingRC);
+
+            HeadingRC = freeWayDistance.Aggregate((stored, next) => stored.Value > next.Value ? stored : next).Key;
+            //MapOwn.PutRoboCleanerOnMap(new Position(startY, startX), HeadingRC);
+
+        }
+        private void SetHeadingToStartEdgeDetection()
+        {
+            void turnRightWhileFrontNotFree()
+            {
+                int i = 0;
+                while (i < 3 && WallOnTheFront())
+                {
+                    TurnRightRC();
+                    i++;
+                }
+            }
+
+            //find start direction
+
+            //before the first move Robo is heading up
+            HeadingRC = Heading.Up; // maybe not necessary
+
+            if (!WallOnTheLeft() && !WallOnTheFront() && !WallOnTheRight())
+            {
+                TurnLeftRC();
+            }
+            else if (WallOnTheRight())
+            {
+                TurnRightRC();
+                turnRightWhileFrontNotFree();
+            }
+            else
+            {
+                turnRightWhileFrontNotFree();
+            }
+        }
         private Position MoveForwardRC(Position actualPos)
         {
             Position newPos = null;
@@ -815,6 +810,11 @@ namespace Challenge
                     //    break;
             }
             return newPos;
+        }
+        public void MoveAndUpdatePositonOnBothMap()
+        {
+            MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
+            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapOwn.PositionRC));
         }
 
 

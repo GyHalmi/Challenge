@@ -19,7 +19,6 @@ namespace Challenge
     class Presentation
     {
         static Random Rnd;
-        static Map MapExternal;
         public void Start()
         {
             Rnd = new Random();
@@ -27,7 +26,7 @@ namespace Challenge
             Map MapExternal = new Map(MapCoordinatesExtra(), new Position(1, 1));
             //MapExternal.PutOnMapRandom();
             RoboCleaner rc = new RoboCleaner(MapExternal);
-            rc.StartCleaning();
+            rc.CleanTheHouse();
             Console.WriteLine("\ndone!");
             
             
@@ -60,7 +59,10 @@ namespace Challenge
                 }
             }
 
-            Map[8][5] = 0;
+            Map[2][3] = 1; 
+            //Map[2][4] = 1; 
+
+            Map[8][5] = 0; 
             Map[8][6] = 0;
             Map[8][7] = 0;
             Map[8][8] = 0;
@@ -93,13 +95,28 @@ namespace Challenge
 
 
 
+            ////figure =x
+            //Map[3][5] = 1;
+            //Map[3][6] = 1;
+            //Map[5][5] = 1;
+            //Map[5][6] = 1;
+
+            //Map[4][7] = 1;
+
+            //Map[3][8] = 1;
+            //Map[5][8] = 1;
+
             //figure =x
             Map[3][5] = 1;
             Map[3][6] = 1;
+            Map[3][7] = 1;
             Map[5][5] = 1;
             Map[5][6] = 1;
+            Map[5][7] = 1;
 
-            Map[4][7] = 1;
+            Map[4][6] = 1;
+            //Map[4][7] = 1;
+            Map[4][8] = 1;
 
             Map[3][8] = 1;
             Map[5][8] = 1;
