@@ -1,0 +1,48 @@
+﻿<Window x:Class="Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Wpf"
+        mc:Ignorable="d"
+        Title="MainWindow" SizeToContent="WidthAndHeight">
+    <!--<Window.CommandBindings>
+        
+        <CommandBinding x:Name="CommDrawWall" Command="local:CustomCommands.DrawWall" CanExecute="CommDrawWall_CanExecute" Executed="CommDrawWall_Executed"/>
+    </Window.CommandBindings>-->
+    <Window.Resources>
+        <SolidColorBrush x:Key="brsActive" Color="YellowGreen"/>
+        <SolidColorBrush x:Key="brsInactive" Color="AliceBlue"/>
+    </Window.Resources>
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top">
+            <TextBlock Name="txtCheck" Height="auto">text:</TextBlock>
+        </WrapPanel>
+        <StackPanel DockPanel.Dock="Right" Width="150">
+            <StackPanel.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Width" Value="100"/>
+                    <Setter Property="Margin" Value="5" />
+                    <Setter Property="Background" Value="{StaticResource brsInactive}" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="Transparent" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Resources>
+            <GroupBox Padding="10" Header="Create map">
+                <StackPanel>
+                    <RadioButton Name="rdbDraw" IsThreeState="False" IsChecked="True">Draw Walls</RadioButton>
+                    <RadioButton Name="rdbRemove" IsThreeState="False" >Remove Walls</RadioButton>
+                    <Button Name="btnResetCanvas" Click="btnResetCanvas_Click" Margin="0,10,0,0">Reset</Button>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+        <Border BorderBrush="Black" BorderThickness="3">
+            <Canvas Name="canvPresentation" Background="White" Height="400" Width="400" MouseMove="canvPresentation_MouseMove" MouseDown="canvPresentation_MouseDown" >
+
+            </Canvas>
+        </Border>
+    </DockPanel>
+</Window>
