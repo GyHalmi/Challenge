@@ -35,12 +35,13 @@
                 <StackPanel>
                     <RadioButton Name="rdbDraw" IsThreeState="False" IsChecked="True">Draw Walls</RadioButton>
                     <RadioButton Name="rdbRemove" IsThreeState="False" >Remove Walls</RadioButton>
+                    <RadioButton Name="rdbAddRc" IsThreeState="False" >Add RoboCleaner</RadioButton>
                     <Button Name="btnResetCanvas" Click="btnResetCanvas_Click" Margin="0,10,0,0">Reset</Button>
                 </StackPanel>
             </GroupBox>
         </StackPanel>
         <Border BorderBrush="Black" BorderThickness="3">
-            <Canvas Name="canvPresentation" Background="White" Height="400" Width="400" MouseMove="canvPresentation_MouseMove" MouseDown="canvPresentation_MouseDown" >
+            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="canvPresentation_MouseMove" MouseDown="canvPresentation_MouseDown" >
 
             </Canvas>
         </Border>

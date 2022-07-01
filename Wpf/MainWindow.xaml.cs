@@ -22,9 +22,10 @@ namespace Wpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        int squareSize = 20;
+        Rectangle roboSource = (Rectangle)Application.Current.FindResource("roboCleaner");
         Border selector = null;
-        int selectorSizeGrower = 4;
+        const int selectorSizeGrower = 4;
+        Rectangle roboCleaner = null;
 
         public MainWindow()
         {
@@ -34,15 +35,15 @@ namespace Wpf
         private void DrawSelector(Point mousePosition)
         {
             //must be an even number
-            selectorSizeGrower = 8;
+            int squareSize = (int)roboSource.Width;
 
-            int x = Math.Min((int)mousePosition.X / squareSize, (int)canvPresentation.ActualWidth / squareSize - 1);
-            int y = Math.Min((int)mousePosition.Y / squareSize, (int)canvPresentation.ActualHeight / squareSize - 1);
+            int x = Math.Min((int)mousePosition.X / squareSize, (int)MapGUI.ActualWidth / squareSize - 1);
+            int y = Math.Min((int)mousePosition.Y / squareSize, (int)MapGUI.ActualHeight / squareSize - 1);
 
             if (selector != null &&
                 (Canvas.GetLeft(selector) + selectorSizeGrower / 2 != x || Canvas.GetTop(selector) + selectorSizeGrower / 2 != y))
             {
-                canvPresentation.Children.Remove(selector);
+                MapGUI.Children.Remove(selector);
             }
 
             selector = new Border()
@@ -56,74 +57,98 @@ namespace Wpf
 
             Canvas.SetLeft(selector, squareSize * x - selectorSizeGrower / 2);
             Canvas.SetTop(selector, squareSize * y - selectorSizeGrower / 2);
-
-            canvPresentation.Children.Add(selector);
+            MapGUI.Children.Add(selector);
         }
         private void DrawWall()
         {
-            Rectangle wallWithMouseOver = null;
-
-            foreach (UIElement item in canvPresentation.Children)
+            if (IsMouseOverAnyMapGuiShape() == null)
             {
-                if (item is Rectangle rect)
-                {
-                    if (item.IsMouseOver) wallWithMouseOver = rect;
-                }
-            }
-
-            if (wallWithMouseOver == null)
-            {
+                Rectangle robo = (Rectangle)Application.Current.FindResource("roboCleaner");
                 Rectangle newWall = new Rectangle
                 {
-                    Width = squareSize,
-                    Height = squareSize,
+                    Width = robo.Width,
+                    Height = robo.Height,
                     Fill = Brushes.Black
                 };
 
-                Canvas.SetTop(newWall, Canvas.GetTop(selector) + selectorSizeGrower / 2);
-                Canvas.SetLeft(newWall, Canvas.GetLeft(selector) + selectorSizeGrower / 2);
-
-                canvPresentation.Children.Add(newWall);
+                SetUiElementPosInsideSelector(newWall);
+                MapGUI.Children.Add(newWall);
             }
 
         }
         private void RemoveWall()
         {
-            Rectangle toDel = null;
-
-            foreach (UIElement item in canvPresentation.Children)
+            if (IsMouseOverAnyMapGuiShape() is Rectangle rect)
             {
-                if (item is Rectangle rect && rect.IsMouseOver)
-                {
-                    toDel = rect;
-                }
+                if (rect == roboCleaner) RoboRemovedFromGUI();
+                if (rect != null) MapGUI.Children.Remove(rect);
             }
-
-            canvPresentation.Children.Remove(toDel);
         }
-        private void DrawOrRemoveWall()
+        private void AddRobo()
+        {
+            if (roboCleaner is null && IsMouseOverAnyMapGuiShape() == null)
+            {
+                roboCleaner = roboSource;
+                SetUiElementPosInsideSelector(roboCleaner);
+                MapGUI.Children.Add(roboCleaner);
+                rdbAddRc.IsEnabled = false;
+            }
+        }
+        /// <summary>
+        /// returns the shape that has the mouse over it, or returns null
+        /// </summary>
+        /// <returns></returns>
+        private Shape IsMouseOverAnyMapGuiShape()
+        {
+            Shape sh = null;
+            int i = 0;
+            while (i < MapGUI.Children.Count && sh == null)
+            {
+                if (MapGUI.Children[i] is Shape shape && shape.IsMouseOver) sh = shape;
+                i++;
+            }
+            return sh;
+        }
+        private void SetUiElementPosInsideSelector(UIElement uiE)
+        {
+            Canvas.SetTop(uiE, Canvas.GetTop(selector) + selectorSizeGrower / 2);
+            Canvas.SetLeft(uiE, Canvas.GetLeft(selector) + selectorSizeGrower / 2);
+        }
+        private void EditMap()
         {
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
                 if (rdbDraw.IsChecked == true) DrawWall();
                 if (rdbRemove.IsChecked == true) RemoveWall();
+                if (rdbAddRc.IsChecked == true) AddRobo();
             }
         }
         private void canvPresentation_MouseMove(object sender, MouseEventArgs e)
         {
-            DrawSelector(e.MouseDevice.GetPosition(canvPresentation));
-            DrawOrRemoveWall();
+            DrawSelector(e.MouseDevice.GetPosition(MapGUI));
+            EditMap();
         }
         private void canvPresentation_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            DrawOrRemoveWall();
+            EditMap();
         }
 
         private void btnResetCanvas_Click(object sender, RoutedEventArgs e)
         {
-            canvPresentation.Children.Clear();
+            MapGUI.Children.Clear();
+            RoboRemovedFromGUI();
         }
+
+        private void RoboRemovedFromGUI()
+        {
+            roboCleaner = null;
+            rdbAddRc.IsEnabled = true;
+        }
+
+
     }
+
+
     //private void CommDrawWall_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     //{
 

@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red"></Rectangle>
     </Application.Resources>
 </Application>
