@@ -41,7 +41,7 @@
             </GroupBox>
         </StackPanel>
         <Border BorderBrush="Black" BorderThickness="3">
-            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="canvPresentation_MouseMove" MouseDown="canvPresentation_MouseDown" >
+            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="MapGUI_MouseMove" MouseDown="MapGUI_MouseDown" >
 
             </Canvas>
         </Border>

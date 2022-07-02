@@ -353,16 +353,16 @@ namespace Wpf
                 Position robo = way[i - 1];
                 Position next = way[i];
 
-                if (MapOwn.AreaOnTheLeft(HeadingRC, robo).Equals(next))
+                if (Map.AreaOnTheLeft(HeadingRC, robo).Equals(next))
                 {
                     TurnLeftRC();
                     turns++;
                 }
-                else if (MapOwn.AreaOnTheFront(HeadingRC, robo).Equals(next))
+                else if (Map.AreaOnTheFront(HeadingRC, robo).Equals(next))
                 {
                     ;
                 }
-                else if (MapOwn.AreaOnTheRight(HeadingRC, robo).Equals(next))
+                else if (Map.AreaOnTheRight(HeadingRC, robo).Equals(next))
                 {
                     TurnRightRC();
                     turns++;
@@ -546,7 +546,7 @@ namespace Wpf
             {
                 if (WallOnTheLeft())
                 {
-                    barriersCoordinates.Add(MapExternal.AreaOnTheLeft(HeadingRC, PositionDetectingRC));
+                    barriersCoordinates.Add(Map.AreaOnTheLeft(HeadingRC, PositionDetectingRC));
                 }
             }
             void RecordPath()

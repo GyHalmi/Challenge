@@ -8,6 +8,7 @@ namespace Wpf
 {
     enum Figure { UncleanedArea = 0, Wall = 1, CleanedArea = 8 };
 
+
     class Map
     {
         public static int[][] initCoordinates(int y, int x)
@@ -20,7 +21,75 @@ namespace Wpf
             }
             return mapCoordinates;
         }
+        public static Position AreaOnTheLeft(Heading headingRC, Position basePosition)
+        {
+            Position pos = null;
+            switch (headingRC)
+            {
+                case Heading.Up:
+                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    break;
+                case Heading.Down:
+                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    break;
+                case Heading.Left:
+                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    break;
+                case Heading.Right:
+                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    break;
+                    //default:
+                    //    break;
+            }
+            return pos;
+        }
+        public static Position AreaOnTheRight(Heading headingRC, Position basePosition)
+        {
+            Position pos = null;
+            switch (headingRC)
+            {
+                case Heading.Up:
+                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    break;
+                case Heading.Down:
+                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    break;
+                case Heading.Left:
+                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    break;
+                case Heading.Right:
+                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    break;
+                    //default:
+                    //    break;
+            }
+            return pos;
+        }
+        public static Position AreaOnTheFront(Heading headingRC, Position basePosition)
+        {
+            Position pos = null;
+            switch (headingRC)
+            {
+                case Heading.Up:
+                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    break;
+                case Heading.Down:
+                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    break;
+                case Heading.Left:
+                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    break;
+                case Heading.Right:
+                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    break;
+                    //default:
+                    //    break;
+            }
 
+            return pos;
+        }
+
+        
         private Random rnd;
         public int[][] Coordinates { get; set; }
         public Position PositionRC { get; set; }
@@ -40,7 +109,7 @@ namespace Wpf
         {
             Heading headUp = Heading.Up;
             int xMax = 0;
-            
+
             for (int i = 0; i < Coordinates.Length; i++)
             {
                 if (Coordinates[i].Length > xMax) xMax = Coordinates[i].Length;
@@ -54,7 +123,7 @@ namespace Wpf
             }
             while (search());
 
-            PutRoboCleanerOnMap(new Position(y, x),headUp);
+            PutRoboCleanerOnMap(new Position(y, x), headUp);
 
             bool search()
             {
@@ -89,7 +158,6 @@ namespace Wpf
             RefreshCoordinate(newPosition, (int)headingRC);
             PositionRC = newPosition;
         }
-        
         public int CoordinateFigureByPosition(Position pos)
         {
             int figure = -1;
@@ -142,80 +210,14 @@ namespace Wpf
 
         }
 
-        public Position AreaOnTheLeft(Heading headingRC, Position basePosition)
-        {
-            Position pos = null;
-            switch (headingRC)
-            {
-                case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
-                    break;
-                case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
-                    break;
-                case Heading.Left:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
-                    break;
-                case Heading.Right:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
-                    break;
-                    //default:
-                    //    break;
-            }
-            return pos;
-        }
+
         public Position AreaOnTheLeft(Heading headingRC)
         {
             return AreaOnTheLeft(headingRC, PositionRC);
         }
-        public Position AreaOnTheRight(Heading headingRC, Position basePosition)
-        {
-            Position pos = null;
-            switch (headingRC)
-            {
-                case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
-                    break;
-                case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
-                    break;
-                case Heading.Left:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
-                    break;
-                case Heading.Right:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
-                    break;
-                    //default:
-                    //    break;
-            }
-            return pos;
-        }
         public Position AreaOnTheRight(Heading headingRC)
         {
             return AreaOnTheRight(headingRC, PositionRC);
-        }
-        public Position AreaOnTheFront(Heading headingRC, Position basePosition)
-        {
-            Position pos = null;
-            switch (headingRC)
-            {
-                case Heading.Up:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
-                    break;
-                case Heading.Down:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
-                    break;
-                case Heading.Left:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
-                    break;
-                case Heading.Right:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
-                    break;
-                    //default:
-                    //    break;
-            }
-
-            return pos;
         }
         public Position AreaOnTheFront(Heading headingRC)
         {
