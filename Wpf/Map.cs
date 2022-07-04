@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Wpf
 {
@@ -21,155 +22,146 @@ namespace Wpf
             }
             return mapCoordinates;
         }
-        public static Position AreaOnTheLeft(Heading headingRC, Position basePosition)
+        /// <summary>
+        /// offset = 1
+        /// </summary>
+        /// <param name="headingRC"></param>
+        /// <param name="basePosition"></param>
+        /// <returns></returns>
+        public static Point AreaOnTheLeft(Heading headingRC, Point basePosition)
         {
-            Position pos = null;
-            switch (headingRC)
-            {
-                case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
-                    break;
-                case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
-                    break;
-                case Heading.Left:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
-                    break;
-                case Heading.Right:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
-                    break;
-                    //default:
-                    //    break;
-            }
-            return pos;
+            return AreaOnTheLeft(headingRC, basePosition, 1);
         }
-        public static Position AreaOnTheRight(Heading headingRC, Position basePosition)
+
+        public static Point AreaOnTheLeft(Heading headingRC, Point basePosition, int offset)
         {
-            Position pos = null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    basePosition.Offset(0-offset, 0);
                     break;
                 case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    basePosition.Offset(offset, 0);
                     break;
                 case Heading.Left:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    basePosition.Offset(0, offset);
                     break;
                 case Heading.Right:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    basePosition.Offset(0, 0-offset);
                     break;
-                    //default:
-                    //    break;
             }
-            return pos;
+            return basePosition;
         }
-        public static Position AreaOnTheFront(Heading headingRC, Position basePosition)
+        /// <summary>
+        /// offset = 1
+        /// </summary>
+        /// <param name="headingRC"></param>
+        /// <param name="basePosition"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static Point AreaOnTheRight(Heading headingRC, Point basePosition)
         {
-            Position pos = null;
+            return AreaOnTheRight(headingRC, basePosition, 1);
+        }
+        public static Point AreaOnTheRight(Heading headingRC, Point basePosition, int offset)
+        {
             switch (headingRC)
             {
                 case Heading.Up:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    basePosition.Offset(offset, 0);
                     break;
                 case Heading.Down:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    basePosition.Offset(0 - offset, 0);
                     break;
                 case Heading.Left:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    basePosition.Offset(0, 0 - offset);
                     break;
                 case Heading.Right:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    basePosition.Offset(0, offset);
                     break;
-                    //default:
-                    //    break;
+            }
+            return basePosition;
+        }
+        /// <summary>
+        /// offset = 1
+        /// </summary>
+        /// <param name="headingRC"></param>
+        /// <param name="basePosition"></param>
+        /// <returns></returns>
+        public static Point AreaOnTheFront(Heading headingRC, Point basePosition)
+        {
+            return AreaOnTheFront(headingRC, basePosition, 1);
+        }
+
+
+        public static Point AreaOnTheFront(Heading headingRC, Point basePosition, int offset)
+        {
+            switch (headingRC)
+            {
+                case Heading.Up:
+                    basePosition.Offset(0, 0 - offset);
+                    break;
+                case Heading.Down:
+                    basePosition.Offset(0, offset);
+                    break;
+                case Heading.Left:
+                    basePosition.Offset(0 - offset, 0);
+                    break;
+                case Heading.Right:
+                    basePosition.Offset(offset, 0);
+                    break;
             }
 
-            return pos;
+            return basePosition;
         }
 
         
         private Random rnd;
         public int[][] Coordinates { get; set; }
-        public Position PositionRC { get; set; }
-        public Map(int[][] coordinates, Position posRC)
+        public Point PositionRC { get; set; }
+        public Map(int[][] coordinates, Point posRC)
         {
             rnd = new Random();
             Coordinates = coordinates;
             PositionRC = posRC;
         }
 
-        public void PutRoboCleanerOnMap(Position pos, Heading headingRC)
+        public void PutRoboCleanerOnMap(Point pos, Heading headingRC)
         {
             PositionRC = pos;
             RefreshCoordinate(pos, (int)headingRC);
         }
-        public void PutRoboCleanerOnMapRandom()
+      
+        public void RefreshCoordinate(Point coordinate, int figure)
         {
-            Heading headUp = Heading.Up;
-            int xMax = 0;
-
-            for (int i = 0; i < Coordinates.Length; i++)
-            {
-                if (Coordinates[i].Length > xMax) xMax = Coordinates[i].Length;
-            }
-
-            int y, x;
-            do
-            {
-                y = rnd.Next(1, Coordinates.Length - 1);
-                x = rnd.Next(1, xMax - 1);
-            }
-            while (search());
-
-            PutRoboCleanerOnMap(new Position(y, x), headUp);
-
-            bool search()
-            {
-                bool s = true;
-                Position p = new Position(y, x);
-                if (CoordinateFigureByPosition(p) == (int)Figure.UncleanedArea)
-                {
-                    int wall = (int)Figure.Wall;
-                    if (CoordinateFigureByPosition(AreaOnTheFront(headUp, p)) == wall ||
-                        CoordinateFigureByPosition(AreaOnTheLeft(headUp, p)) == wall ||
-                        CoordinateFigureByPosition(AreaOnTheRight(headUp, p)) == wall ||
-                        CoordinateFigureByPosition(AreaOnTheFront(Heading.Down, p)) == wall)
-                    {
-                        s = false;
-                    }
-                }
-                return s;
-            }
+            Coordinates[(int)coordinate.Y][(int)coordinate.X] = figure;
         }
-        public void RefreshCoordinate(Position coordinate, int figure)
-        {
-            Coordinates[coordinate.Y][coordinate.X] = figure;
-        }
-        /// <summary>
-        /// returns -1 if position is out of range
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public void MoveOnMapAndUpdatePositionRC(Heading headingRC, Position newPosition)
+
+        public void MoveOnMapAndUpdatePositionRC(Heading headingRC, Point newPosition)
         {
             RefreshCoordinate(PositionRC, (int)Figure.CleanedArea);
             RefreshCoordinate(newPosition, (int)headingRC);
             PositionRC = newPosition;
         }
-        public int CoordinateFigureByPosition(Position pos)
+
+        /// <summary>
+        /// returns -1 if position is out of range
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public int CoordinateFigureByPosition(Point pos)
         {
             int figure = -1;
             try
             {
-                figure = Coordinates[pos.Y][pos.X];
+                figure = Coordinates[(int)pos.Y][(int)pos.X];
             }
             catch (IndexOutOfRangeException)
             {
             }
             return figure;
         }
+
         public void Display()
         {
             for (int i = 0; i < Coordinates.Length; i++)
@@ -211,17 +203,60 @@ namespace Wpf
         }
 
 
-        public Position AreaOnTheLeft(Heading headingRC)
+        public Point AreaOnTheLeft(Heading headingRC)
         {
             return AreaOnTheLeft(headingRC, PositionRC);
         }
-        public Position AreaOnTheRight(Heading headingRC)
+        public Point AreaOnTheRight(Heading headingRC)
         {
             return AreaOnTheRight(headingRC, PositionRC);
         }
-        public Position AreaOnTheFront(Heading headingRC)
+        public Point AreaOnTheFront(Heading headingRC)
         {
             return AreaOnTheFront(headingRC, PositionRC);
         }
+
+        
+      public void PutRoboCleanerOnMapRandom()
+      {
+        /*
+          Heading headUp = Heading.Up;
+          int xMax = 0;
+
+          for (int i = 0; i < Coordinates.Length; i++)
+          {
+              if (Coordinates[i].Length > xMax) xMax = Coordinates[i].Length;
+          }
+
+          int y, x;
+          do
+          {
+              y = rnd.Next(1, Coordinates.Length - 1);
+              x = rnd.Next(1, xMax - 1);
+          }
+          while (search());
+
+          PutRoboCleanerOnMap(new Position(y, x), headUp);
+
+          bool search()
+          {
+              bool s = true;
+              Position p = new Position(y, x);
+              if (CoordinateFigureByPosition(p) == (int)Figure.UncleanedArea)
+              {
+                  int wall = (int)Figure.Wall;
+                  if (CoordinateFigureByPosition(AreaOnTheFront(headUp, p)) == wall ||
+                      CoordinateFigureByPosition(AreaOnTheLeft(headUp, p)) == wall ||
+                      CoordinateFigureByPosition(AreaOnTheRight(headUp, p)) == wall ||
+                      CoordinateFigureByPosition(AreaOnTheFront(Heading.Down, p)) == wall)
+                  {
+                      s = false;
+                  }
+              }
+              return s;
+          }
+        */
+      }
+      
     }
 }

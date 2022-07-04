@@ -31,9 +31,45 @@ namespace Wpf
         public MainWindow()
         {
             InitializeComponent();
+
+            RoboCleaner rc = new RoboCleaner(new Map( MapCoordinates2(), new Point(0,0)),roboSource);
+            rc.CleanTheHouse();
+            MessageBox.Show("ready");
         }
 
+        int[][] MapCoordinates2()
+        {
 
+            int[][] Map;
+            int Rows = 8;
+            int Columns = 6;
+            int Columns2 = 8;
+
+            Map = new int[Rows][];
+            for (int i = 0; i < Rows; i++)
+            {
+                if (i >= 3) Map[i] = new int[Columns2];
+                else Map[i] = new int[Columns];
+
+
+            }
+
+            for (int row = 0; row < Map.Length; row++)
+            {
+                for (int col = 0; col < Map[row].Length; col++)
+                {
+                    if (row == 0 || col == 0 || row == Map.Length - 1 || col == Map[row].Length - 1
+                        || row == 3)
+                    {
+                        Map[row][col] = 1;
+                    }
+                }
+            }
+
+            Map[3][3] = 0;
+
+            return Map;
+        }
         private void DrawSelector(Point mousePosition)
         {
             //must be an even number
@@ -84,6 +120,8 @@ namespace Wpf
             }
 
         }
+
+
         private void RemoveWall()
         {
             if (ReturnMapGuiShapeWithMouseOver() is Rectangle rect)
@@ -145,38 +183,6 @@ namespace Wpf
         private void MapGUI_MouseDown(object sender, MouseButtonEventArgs e)
         {
             EditMap();
-            if (Mouse.RightButton == MouseButtonState.Pressed)
-            {
-
-                //Rectangle r = new Rectangle { Width = 10, Height = 10, Fill = Brushes.Orange };
-                Canvas map = (Canvas)roboCleanerOnMapGUI.Parent;
-                //Canvas.SetTop(r, Canvas.GetTop(map));
-                //Canvas.SetLeft(r, Canvas.GetLeft(map));
-                //map.Children.Add(r);
-
-                foreach (var child in map.Children)
-                {
-                    if (child is Rectangle rect)
-                    {
-                        double a = Canvas.GetTop(rect);
-                        double b = Canvas.GetTop(roboCleanerOnMapGUI);
-
-                        double x = VisualOffset.X;
-                        double y = VisualOffset.Y;
-
-                   if(rect.Uid == "12")
-                        {
-                            ;
-                        }
-
-                        if (a-roboCleanerOnMapGUI.Width == b)
-                        {
-                            ;
-                        }
-                    }
-                }
-
-            }
         }
 
         private void btnResetCanvas_Click(object sender, RoutedEventArgs e)
