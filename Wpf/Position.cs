@@ -20,6 +20,7 @@ namespace Wpf
         {
             return new Position(Y - 1, X);
         }
+  
         public Position Down()
         {
             return new Position(Y + 1, X);

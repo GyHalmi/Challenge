@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace Wpf
@@ -18,10 +21,14 @@ namespace Wpf
         public Map MapOwn { get; set; }
         private int MapRefreshTime { get; set; }
 
+        private Canvas MapGUI { get; set; }
+
         public RoboCleaner(Map mapExternal, Rectangle roboCleaner)
         {
-            RC = roboCleaner;
             MapExternal = mapExternal;
+
+            RC = roboCleaner;
+            MapGUI = (Canvas)RC.Parent;
             HeadingRC = Heading.Up;
             MapOwn = new Map(Map.initCoordinates(10, 10), new Position(0, 0));
             MapRefreshTime = 600;
@@ -662,8 +669,17 @@ namespace Wpf
 
 
         //environment dependent
+        private Point PositionRealtiveToGuiRC(posX, posY)
+        {
+            Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0 - roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
+
+        }
         private bool WallOnTheLeft()
         {
+            Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0 - roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
+            left.
+            HitTestResult res = VisualTreeHelper.HitTest(MapGUI, left);
+
             return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheLeft(HeadingRC)).Equals((int)Figure.Wall);
         }
         private bool WallOnTheFront()

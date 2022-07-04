@@ -26,12 +26,13 @@ namespace Wpf
         Border selector = null;
         const int borderThicknessOnOneAxis = 2;
         Rectangle roboCleanerOnMapGUI = null;
-        int borderDistance = 0;
+        int borderDistance = 4;
 
         public MainWindow()
         {
             InitializeComponent();
         }
+
 
         private void DrawSelector(Point mousePosition)
         {
@@ -51,8 +52,8 @@ namespace Wpf
             {
                 //Width = squareSize + borderThicknessOnOneAxis,
                 //Height = squareSize + borderThicknessOnOneAxis,
-                Width = squareSize + borderThicknessOnOneAxis+borderDistance,
-                Height = squareSize + borderThicknessOnOneAxis+borderDistance,
+                Width = squareSize + borderThicknessOnOneAxis + borderDistance,
+                Height = squareSize + borderThicknessOnOneAxis + borderDistance,
                 BorderBrush = Brushes.DodgerBlue,
                 BorderThickness = new Thickness(borderThicknessOnOneAxis / 2)
             };
@@ -60,24 +61,24 @@ namespace Wpf
 
             //Canvas.SetLeft(selector, squareSize * x - borderThicknessOnOneAxis / 2);
             //Canvas.SetTop(selector, squareSize * y - borderThicknessOnOneAxis / 2);
-            
-            Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis+borderDistance) / 2);
-            Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis+borderDistance) / 2);
+
+            Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis + borderDistance) / 2);
+            Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis + borderDistance) / 2);
             MapGUI.Children.Add(selector);
         }
         private void DrawWall()
         {
             if (ReturnMapGuiShapeWithMouseOver() == null)
             {
-                Rectangle robo = (Rectangle)Application.Current.FindResource("roboCleaner");
                 Rectangle newWall = new Rectangle
                 {
-                    Width = robo.Width,
-                    Height = robo.Height,
-                    Fill = Brushes.Black
+                    Width = roboSource.Width,
+                    Height = roboSource.Height,
+                    Fill = Brushes.Black,
+                    Name = Application.Current.FindResource("strWall").ToString()
                 };
 
-                SetUiElementPosInsideSelector(newWall);
+                SetPosAndUidAccordingToSelector(newWall);
                 MapGUI.Children.Add(newWall);
             }
 
@@ -95,7 +96,7 @@ namespace Wpf
             if (roboCleanerOnMapGUI is null && ReturnMapGuiShapeWithMouseOver() == null)
             {
                 roboCleanerOnMapGUI = roboSource;
-                SetUiElementPosInsideSelector(roboCleanerOnMapGUI);
+                SetPosAndUidAccordingToSelector(roboCleanerOnMapGUI);
                 MapGUI.Children.Add(roboCleanerOnMapGUI);
                 rdbAddRc.IsEnabled = false;
             }
@@ -115,12 +116,16 @@ namespace Wpf
             }
             return sh;
         }
-        private void SetUiElementPosInsideSelector(UIElement uiE)
+        private void SetPosAndUidAccordingToSelector(UIElement uiE)
         {
             //Canvas.SetTop(uiE, Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2);
             //Canvas.SetLeft(uiE, Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2);
-            Canvas.SetTop(uiE, Canvas.GetTop(selector) + (borderThicknessOnOneAxis+borderDistance) / 2);
-            Canvas.SetLeft(uiE, Canvas.GetLeft(selector) + (borderThicknessOnOneAxis+borderDistance) / 2);
+            int y = (int)Canvas.GetTop(selector);
+            int x = (int)Canvas.GetLeft(selector);
+
+            Canvas.SetTop(uiE, y + (borderThicknessOnOneAxis + borderDistance) / 2);
+            Canvas.SetLeft(uiE, x + (borderThicknessOnOneAxis + borderDistance) / 2);
+            Utilities.SetUID(uiE,y, x);
         }
         private void EditMap()
         {
@@ -130,6 +135,22 @@ namespace Wpf
                 if (rdbRemove.IsChecked == true) RemoveWall();
                 if (rdbAddRc.IsChecked == true) AddRobo();
             }
+           if(Mouse.RightButton == MouseButtonState.Pressed)
+            {
+                Point pNull = new Point(0, 0);
+
+                Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0-roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
+
+                HitTestResult res = VisualTreeHelper.HitTest(MapGUI, left);
+
+                //VisualTreeHelper.GetOffset(roboCleanerOnMapGUI)
+                //Canvas  roboCleanerOnMapGUI.Parent();
+                //MapGUI.
+                //Mouse
+                //Mouse.UpdateCursor();
+                //if(rec roboCleanerOnMapGUI.TranslatePoint(pNull,MapGUI)
+            }
+
         }
         private void MapGUI_MouseMove(object sender, MouseEventArgs e)
         {
@@ -139,15 +160,38 @@ namespace Wpf
         private void MapGUI_MouseDown(object sender, MouseButtonEventArgs e)
         {
             EditMap();
-            //if(Mouse.RightButton == MouseButtonState.Pressed)
-            //{
-            //    Rectangle r = new Rectangle { Width = 10, Height = 10, Fill = Brushes.Orange };
-            //    Canvas par = (Canvas)roboCleanerOnMapGUI.Parent;
-            //    Canvas.SetTop(r, Canvas.GetTop(par));
-            //    Canvas.SetLeft(r, Canvas.GetLeft(par));
-            //    par.Children.Add(r);
+            if (Mouse.RightButton == MouseButtonState.Pressed)
+            {
 
-            //}
+                //Rectangle r = new Rectangle { Width = 10, Height = 10, Fill = Brushes.Orange };
+                Canvas map = (Canvas)roboCleanerOnMapGUI.Parent;
+                //Canvas.SetTop(r, Canvas.GetTop(map));
+                //Canvas.SetLeft(r, Canvas.GetLeft(map));
+                //map.Children.Add(r);
+
+                foreach (var child in map.Children)
+                {
+                    if (child is Rectangle rect)
+                    {
+                        double a = Canvas.GetTop(rect);
+                        double b = Canvas.GetTop(roboCleanerOnMapGUI);
+
+                        double x = VisualOffset.X;
+                        double y = VisualOffset.Y;
+
+                   if(rect.Uid == "12")
+                        {
+                            ;
+                        }
+
+                        if (a-roboCleanerOnMapGUI.Width == b)
+                        {
+                            ;
+                        }
+                    }
+                }
+
+            }
         }
 
         private void btnResetCanvas_Click(object sender, RoutedEventArgs e)
