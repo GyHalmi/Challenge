@@ -3,11 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Wpf
 {
     class Position
     {
+        public static Position ConvertPointToPosition(Point point)
+        {
+            return new Position((int)point.Y, (int)point.X);
+        }
+        public static Point ConvertPositionToPoint(Position pos)
+        {
+            return new Point(pos.X, pos.Y);
+        }
+
         public int Y { get; set; }
         public int X { get; set; }
         public Position(int y, int x)
@@ -15,25 +25,41 @@ namespace Wpf
             Y = y;
             X = x;
         }
-
-        public Position Up()
-        {
-            return new Position(Y - 1, X);
-        }
   
-        public Position Down()
+        public Position ShiftUp(int offset)
         {
-            return new Position(Y + 1, X);
+            return new Position(Y - offset, X);
         }
-        public Position Left()
+        public Position ShiftUp()
         {
-            return new Position(Y, X - 1);
+            return ShiftUp(1);
         }
-        public Position Right()
+        public Position ShiftDown(int offset)
         {
-            return new Position(Y, X + 1);
+            return new Position(Y + offset, X);
+        }
+        public Position ShiftDown()
+        {
+            return ShiftDown(1);
+        }
+        public Position ShiftLeft(int offset)
+        {
+            return new Position(Y, X - offset);
+        }
+        public Position ShiftLeft()
+        {
+            return ShiftLeft(1);
+        }
+        public Position ShiftRight(int offset)
+        {
+            return new Position(Y, X + offset);
+        }
+        public Position ShiftRight()
+        {
+            return ShiftRight(1);
         }
        
+
         public override bool Equals(object other)
         {
             //Position pos = (Position)other;

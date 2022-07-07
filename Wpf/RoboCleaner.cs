@@ -23,10 +23,9 @@ namespace Wpf
 
         private Canvas MapGUI { get; set; }
 
-        public RoboCleaner(Map mapExternal, Rectangle roboCleaner)
+        //public RoboCleaner(Map mapExternal, Rectangle roboCleaner)
+        public RoboCleaner(Rectangle roboCleaner)
         {
-            MapExternal = mapExternal;
-
             RC = roboCleaner;
             MapGUI = (Canvas)RC.Parent;
             HeadingRC = Heading.Up;
@@ -36,9 +35,9 @@ namespace Wpf
 
         public void CleanTheHouse()
         {
-            DisplayMap(MapExternal);
+            //DisplayMap(MapExternal);
             MapOwn = CreateMap();
-            DisplayTwoMaps(MapExternal, MapOwn);
+            //DisplayTwoMaps(MapExternal, MapOwn);
 
             List<Position> nearestUncleanedZones = FindNearestUncleanedZones();
 
@@ -245,13 +244,13 @@ namespace Wpf
                 methodNumber = 3; //increase direction right
                 if (ongoin() && last.X == targetPosition.X)
                 {
-                    next = last.Right();
+                    next = last.ShiftRight();
                     evaluateNext();
                 }
                 methodNumber = 4; //increase direction left
                 if (ongoin() && last.X == targetPosition.X)
                 {
-                    next = last.Left();
+                    next = last.ShiftLeft();
                     evaluateNext();
                 }
 
@@ -265,13 +264,13 @@ namespace Wpf
                 methodNumber = 7; //increase direction up
                 if (ongoin() && last.Y == targetPosition.Y)
                 {
-                    next = last.Up();
+                    next = last.ShiftUp();
                     evaluateNext();
                 }
                 methodNumber = 8; //increase direction down
                 if (ongoin() && last.Y == targetPosition.Y)
                 {
-                    next = last.Down();
+                    next = last.ShiftDown();
                     evaluateNext();
                 }
 
@@ -418,7 +417,7 @@ namespace Wpf
                 }
 
                 MoveAndUpdatePositonOnBothMap();
-                DisplayTwoMaps(MapExternal, MapOwn);
+                //DisplayTwoMaps(MapExternal, MapOwn);
                 i++;
             }
 
@@ -448,7 +447,7 @@ namespace Wpf
                     TurnRightRC();
                 }
                 MoveAndUpdatePositonOnBothMap();
-                DisplayTwoMaps(MapExternal, MapOwn);
+                //DisplayTwoMaps(MapExternal, MapOwn);
 
             } while (!WallOnTheFront() && !CleanedOnTheFront() ||
                     !WallOnTheLeft() && !CleanedOnTheLeft() ||
@@ -477,7 +476,7 @@ namespace Wpf
         private void DetectAndAddBarrierToOwnMap()
         {
             Map barrierMap = CreateMap();
-            DisplayTwoMaps(MapExternal, barrierMap);
+            //DisplayTwoMaps(MapExternal, barrierMap);
 
             int shiftY = MapOwn.PositionRC.Y - barrierMap.PositionRC.Y;
             int shiftX = MapOwn.PositionRC.X - barrierMap.PositionRC.X;
@@ -491,7 +490,7 @@ namespace Wpf
                     if (figure != 0) MapOwn.RefreshCoordinate(new Position(p.Y + shiftY, p.X + shiftX), figure);
                 }
             }
-            DisplayTwoMaps(MapExternal, MapOwn);
+            //DisplayTwoMaps(MapExternal, MapOwn);
 
 
         }
@@ -514,7 +513,7 @@ namespace Wpf
             int xMax = barrierXMinMax.maximum > pathXMinMax.maximum ? barrierXMinMax.maximum : pathXMinMax.maximum;
 
             Map newMap = new Map(Map.initCoordinates(yMax - yMin + 1, xMax - xMin + 1), new Position(0, 0));
-            DisplayTwoMaps(MapExternal, newMap);
+            //DisplayTwoMaps(MapExternal, newMap);
 
             Position shiftCoordinate(Position p)
             {
@@ -588,8 +587,9 @@ namespace Wpf
                 }
                 RecordBarrier();
 
-                MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-                PositionDetectingRC = MoveForwardRC(PositionDetectingRC);
+                MoveOnMapGUI();
+                PositionDetectingRC = Map.AreaOnTheFront(HeadingRC,PositionDetectingRC);
+
                 RecordBarrier();
                 RecordPath();
                 //DisplayMap(MapExternal);
@@ -646,10 +646,10 @@ namespace Wpf
 
             void checkNeighbours(Position pos)
             {
-                checkPos(pos.Up());
-                checkPos(pos.Right());
-                checkPos(pos.Down());
-                checkPos(pos.Left());
+                checkPos(pos.ShiftUp());
+                checkPos(pos.ShiftRight());
+                checkPos(pos.ShiftDown());
+                checkPos(pos.ShiftLeft());
                 checkedPositions[pos] = true;
             }
 
@@ -669,26 +669,33 @@ namespace Wpf
 
 
         //environment dependent
-        private Point PositionRealtiveToGuiRC(posX, posY)
+        private Point RcPositionOnMapGUI()
         {
-            Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0 - roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
-
+            return RC.TranslatePoint(new Point(0, 0), MapGUI);
+        }
+        private Point RcMiddleOnMapGUI()
+        {
+            return RC.TranslatePoint(new Point(RC.ActualWidth / 2, RC.ActualHeight / 2), MapGUI);
+        }
+        private bool IsPointHitsWall(Point p)
+        {
+            HitTestResult res = VisualTreeHelper.HitTest(MapGUI, p);
+            return res.VisualHit is Rectangle rect && rect.Name == Application.Current.FindResource("strWall").ToString();
         }
         private bool WallOnTheLeft()
         {
-            Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0 - roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
-            left.
-            HitTestResult res = VisualTreeHelper.HitTest(MapGUI, left);
-
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheLeft(HeadingRC)).Equals((int)Figure.Wall);
+            Position left = Map.AreaOnTheLeft(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(left.ToPoint());
         }
         private bool WallOnTheFront()
         {
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheFront(HeadingRC)).Equals((int)Figure.Wall);
+            Position front = Map.AreaOnTheFront(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(front.ToPoint());
         }
         private bool WallOnTheRight()
         {
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheRight(HeadingRC)).Equals((int)Figure.Wall);
+            Position right = Map.AreaOnTheRight(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(right.ToPoint());
         }
 
 
@@ -765,13 +772,13 @@ namespace Wpf
 
                 while (nextPosFigure() != (int)Figure.Wall && nextPosFigure() != (int)Figure.CleanedArea)
                 {
-                    pos = MoveForwardRC(pos);
+                    pos = Map.AreaOnTheFront(HeadingRC,pos);
                     cnt++;
                 }
 
                 int nextPosFigure()
                 {
-                    return MapOwn.CoordinateFigureByPosition(MoveForwardRC(pos));
+                    return MapOwn.CoordinateFigureByPosition(Map.AreaOnTheFront(HeadingRC, pos));
                 }
                 Position p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
                 freeWayDistance.Add(HeadingRC, cnt);
@@ -814,34 +821,38 @@ namespace Wpf
                 turnRightWhileFrontNotFree();
             }
         }
-        private Position MoveForwardRC(Position actualPos)
-        {
-            Position newPos = null;
-            switch (HeadingRC)
-            {
-                case Heading.Up:
-                    newPos = actualPos.Up();
-                    break;
-                case Heading.Down:
-                    newPos = actualPos.Down();
-                    break;
-                case Heading.Left:
-                    newPos = actualPos.Left();
-                    break;
-                case Heading.Right:
-                    newPos = actualPos.Right();
-                    break;
-                    //default:
-                    //    break;
-            }
-            return newPos;
-        }
+ 
         private void MoveAndUpdatePositonOnBothMap()
         {
-            MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapOwn.PositionRC));
+            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MapOwn.AreaOnTheFront(HeadingRC));
+            MoveOnMapGUI();
         }
+        private void MoveOnMapGUI()
+        {
+            Rectangle cleanedArea = new Rectangle
+            {
+                Width = RC.ActualWidth,
+                Height = RC.ActualHeight,
+                Fill = Brushes.GreenYellow
+            };
 
+            Point oldPos = RcPositionOnMapGUI();
+
+            Canvas.SetTop(cleanedArea, oldPos.Y);
+            Canvas.SetLeft(cleanedArea, oldPos.X);
+            MapGUI.Children.Add(cleanedArea);
+
+            Point newPos = Map.AreaOnTheFront(HeadingRC, RcPositionOnMapGUI().ToPosition(), OffsetMapGUI()).ToPoint();
+            MapGUI.Children.Remove(RC);
+            Canvas.SetTop(RC, newPos.Y);
+            Canvas.SetLeft(RC, newPos.X);
+            MapGUI.Children.Add(RC);
+
+        }
+       private int OffsetMapGUI()
+        {
+            return (int)RC.ActualWidth;
+        }
 
         private void DisplayMap(Map map)
         {

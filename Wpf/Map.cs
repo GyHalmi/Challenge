@@ -21,22 +21,49 @@ namespace Wpf
             }
             return mapCoordinates;
         }
+
+        public static Position AreaOnTheLeft(Heading headingRC, Position basePosition, int offset)
+        {
+            Position pos= null;
+            switch (headingRC)
+            {
+                case Heading.Up:
+                    pos = basePosition.ShiftLeft(offset);
+                    break;
+                case Heading.Down:
+                    pos = basePosition.ShiftRight(offset);
+                    break;
+                case Heading.Left:
+                    pos = basePosition.ShiftDown(offset);
+                    break;
+                case Heading.Right:
+                    pos = basePosition.ShiftUp(offset);
+                    break;
+                    //default:
+                    //    break;
+            }
+            return pos;
+        }
         public static Position AreaOnTheLeft(Heading headingRC, Position basePosition)
+        {
+           return AreaOnTheLeft(headingRC, basePosition, 1);
+        }
+        public static Position AreaOnTheRight(Heading headingRC, Position basePosition, int offset)
         {
             Position pos = null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    pos = basePosition.ShiftRight(offset);
                     break;
                 case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    pos = basePosition.ShiftLeft(offset);
                     break;
                 case Heading.Left:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    pos = basePosition.ShiftUp(offset);
                     break;
                 case Heading.Right:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    pos = basePosition.ShiftDown(offset);
                     break;
                     //default:
                     //    break;
@@ -45,42 +72,24 @@ namespace Wpf
         }
         public static Position AreaOnTheRight(Heading headingRC, Position basePosition)
         {
-            Position pos = null;
-            switch (headingRC)
-            {
-                case Heading.Up:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
-                    break;
-                case Heading.Down:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
-                    break;
-                case Heading.Left:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
-                    break;
-                case Heading.Right:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
-                    break;
-                    //default:
-                    //    break;
-            }
-            return pos;
+            return AreaOnTheRight(headingRC, basePosition, 1);
         }
-        public static Position AreaOnTheFront(Heading headingRC, Position basePosition)
+        public static Position AreaOnTheFront(Heading headingRC, Position basePosition, int offset)
         {
             Position pos = null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    pos = new Position(basePosition.Y - 1, basePosition.X);
+                    pos = basePosition.ShiftUp(offset);
                     break;
                 case Heading.Down:
-                    pos = new Position(basePosition.Y + 1, basePosition.X);
+                    pos = basePosition.ShiftDown(offset);
                     break;
                 case Heading.Left:
-                    pos = new Position(basePosition.Y, basePosition.X - 1);
+                    pos = basePosition.ShiftLeft(offset);
                     break;
                 case Heading.Right:
-                    pos = new Position(basePosition.Y, basePosition.X + 1);
+                    pos = basePosition.ShiftRight(offset);
                     break;
                     //default:
                     //    break;
@@ -88,8 +97,12 @@ namespace Wpf
 
             return pos;
         }
+        public static Position AreaOnTheFront(Heading headingRC, Position basePosition)
+        {
+            return AreaOnTheFront(headingRC, basePosition, 1);
+        }
 
-        
+
         private Random rnd;
         public int[][] Coordinates { get; set; }
         public Position PositionRC { get; set; }
@@ -210,7 +223,7 @@ namespace Wpf
 
         }
 
-
+        
         public Position AreaOnTheLeft(Heading headingRC)
         {
             return AreaOnTheLeft(headingRC, PositionRC);

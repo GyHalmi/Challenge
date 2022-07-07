@@ -125,7 +125,6 @@ namespace Wpf
 
             Canvas.SetTop(uiE, y + (borderThicknessOnOneAxis + borderDistance) / 2);
             Canvas.SetLeft(uiE, x + (borderThicknessOnOneAxis + borderDistance) / 2);
-            Utilities.SetUID(uiE,y, x);
         }
         private void EditMap()
         {
@@ -135,22 +134,6 @@ namespace Wpf
                 if (rdbRemove.IsChecked == true) RemoveWall();
                 if (rdbAddRc.IsChecked == true) AddRobo();
             }
-           if(Mouse.RightButton == MouseButtonState.Pressed)
-            {
-                Point pNull = new Point(0, 0);
-
-                Point left = roboCleanerOnMapGUI.TranslatePoint(new Point(0-roboCleanerOnMapGUI.ActualWidth, 0), MapGUI);
-
-                HitTestResult res = VisualTreeHelper.HitTest(MapGUI, left);
-
-                //VisualTreeHelper.GetOffset(roboCleanerOnMapGUI)
-                //Canvas  roboCleanerOnMapGUI.Parent();
-                //MapGUI.
-                //Mouse
-                //Mouse.UpdateCursor();
-                //if(rec roboCleanerOnMapGUI.TranslatePoint(pNull,MapGUI)
-            }
-
         }
         private void MapGUI_MouseMove(object sender, MouseEventArgs e)
         {
@@ -160,38 +143,6 @@ namespace Wpf
         private void MapGUI_MouseDown(object sender, MouseButtonEventArgs e)
         {
             EditMap();
-            if (Mouse.RightButton == MouseButtonState.Pressed)
-            {
-
-                //Rectangle r = new Rectangle { Width = 10, Height = 10, Fill = Brushes.Orange };
-                Canvas map = (Canvas)roboCleanerOnMapGUI.Parent;
-                //Canvas.SetTop(r, Canvas.GetTop(map));
-                //Canvas.SetLeft(r, Canvas.GetLeft(map));
-                //map.Children.Add(r);
-
-                foreach (var child in map.Children)
-                {
-                    if (child is Rectangle rect)
-                    {
-                        double a = Canvas.GetTop(rect);
-                        double b = Canvas.GetTop(roboCleanerOnMapGUI);
-
-                        double x = VisualOffset.X;
-                        double y = VisualOffset.Y;
-
-                   if(rect.Uid == "12")
-                        {
-                            ;
-                        }
-
-                        if (a-roboCleanerOnMapGUI.Width == b)
-                        {
-                            ;
-                        }
-                    }
-                }
-
-            }
         }
 
         private void btnResetCanvas_Click(object sender, RoutedEventArgs e)
@@ -206,7 +157,10 @@ namespace Wpf
             rdbAddRc.IsEnabled = true;
         }
 
-
+        private void btnStart_Click(object sender, RoutedEventArgs e)
+        {
+            new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
+        }
     }
 
 
