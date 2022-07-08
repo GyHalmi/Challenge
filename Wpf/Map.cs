@@ -22,36 +22,38 @@ namespace Wpf
             }
             return mapCoordinates;
         }
+
         /// <summary>
         /// offset = 1
         /// </summary>
         /// <param name="headingRC"></param>
         /// <param name="basePosition"></param>
         /// <returns></returns>
-        public static Point AreaOnTheLeft(Heading headingRC, Point basePosition)
+        public static Position AreaOnTheLeft(Heading headingRC, Position basePosition)
         {
             return AreaOnTheLeft(headingRC, basePosition, 1);
         }
-
-        public static Point AreaOnTheLeft(Heading headingRC, Point basePosition, int offset)
+        public static Position AreaOnTheLeft(Heading headingRC, Position basePosition, int offset)
         {
+            Position pos= null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    basePosition.Offset(0-offset, 0);
+                    pos = basePosition.ShiftLeft(offset);
                     break;
                 case Heading.Down:
-                    basePosition.Offset(offset, 0);
+                    pos = basePosition.ShiftRight(offset);
                     break;
                 case Heading.Left:
-                    basePosition.Offset(0, offset);
+                    pos = basePosition.ShiftDown(offset);
                     break;
                 case Heading.Right:
-                    basePosition.Offset(0, 0-offset);
+                    pos = basePosition.ShiftUp(offset);
                     break;
             }
             return basePosition;
         }
+
         /// <summary>
         /// offset = 1
         /// </summary>
@@ -59,85 +61,86 @@ namespace Wpf
         /// <param name="basePosition"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        public static Point AreaOnTheRight(Heading headingRC, Point basePosition)
+        public static Position AreaOnTheRight(Heading headingRC, Position basePosition)
         {
             return AreaOnTheRight(headingRC, basePosition, 1);
         }
-        public static Point AreaOnTheRight(Heading headingRC, Point basePosition, int offset)
+        public static Position AreaOnTheRight(Heading headingRC, Position basePosition, int offset)
         {
+            Position pos = null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    basePosition.Offset(offset, 0);
+                    pos = basePosition.ShiftRight(offset);
                     break;
                 case Heading.Down:
-                    basePosition.Offset(0 - offset, 0);
+                    pos = basePosition.ShiftLeft(offset);
                     break;
                 case Heading.Left:
-                    basePosition.Offset(0, 0 - offset);
+                    pos = basePosition.ShiftUp(offset);
                     break;
                 case Heading.Right:
-                    basePosition.Offset(0, offset);
+                    pos = basePosition.ShiftDown(offset);
                     break;
             }
             return basePosition;
         }
+        
         /// <summary>
         /// offset = 1
         /// </summary>
         /// <param name="headingRC"></param>
         /// <param name="basePosition"></param>
         /// <returns></returns>
-        public static Point AreaOnTheFront(Heading headingRC, Point basePosition)
+        public static Position AreaOnTheFront(Heading headingRC, Position basePosition)
         {
             return AreaOnTheFront(headingRC, basePosition, 1);
         }
-
-
-        public static Point AreaOnTheFront(Heading headingRC, Point basePosition, int offset)
+        public static Position AreaOnTheFront(Heading headingRC, Position basePosition, int offset)
         {
+            Position pos = null;
             switch (headingRC)
             {
                 case Heading.Up:
-                    basePosition.Offset(0, 0 - offset);
+                    pos = basePosition.ShiftUp(offset);
                     break;
                 case Heading.Down:
-                    basePosition.Offset(0, offset);
+                    pos = basePosition.ShiftDown(offset);
                     break;
                 case Heading.Left:
-                    basePosition.Offset(0 - offset, 0);
+                    pos = basePosition.ShiftLeft(offset);
                     break;
                 case Heading.Right:
-                    basePosition.Offset(offset, 0);
+                    pos = basePosition.ShiftRight(offset);
                     break;
             }
 
             return basePosition;
         }
 
-        
+
         private Random rnd;
         public int[][] Coordinates { get; set; }
-        public Point PositionRC { get; set; }
-        public Map(int[][] coordinates, Point posRC)
+        public Position PositionRC { get; set; }
+        public Map(int[][] coordinates, Position posRC)
         {
             rnd = new Random();
             Coordinates = coordinates;
             PositionRC = posRC;
         }
 
-        public void PutRoboCleanerOnMap(Point pos, Heading headingRC)
+        public void PutRoboCleanerOnMap(Position pos, Heading headingRC)
         {
             PositionRC = pos;
             RefreshCoordinate(pos, (int)headingRC);
         }
       
-        public void RefreshCoordinate(Point coordinate, int figure)
+        public void RefreshCoordinate(Position coordinate, int figure)
         {
             Coordinates[(int)coordinate.Y][(int)coordinate.X] = figure;
         }
 
-        public void MoveOnMapAndUpdatePositionRC(Heading headingRC, Point newPosition)
+        public void MoveOnMapAndUpdatePositionRC(Heading headingRC, Position newPosition)
         {
             RefreshCoordinate(PositionRC, (int)Figure.CleanedArea);
             RefreshCoordinate(newPosition, (int)headingRC);
@@ -149,7 +152,7 @@ namespace Wpf
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public int CoordinateFigureByPosition(Point pos)
+        public int CoordinateFigureByPosition(Position pos)
         {
             int figure = -1;
             try
@@ -202,16 +205,15 @@ namespace Wpf
 
         }
 
-
-        public Point AreaOnTheLeft(Heading headingRC)
+        public Position AreaOnTheLeft(Heading headingRC)
         {
             return AreaOnTheLeft(headingRC, PositionRC);
         }
-        public Point AreaOnTheRight(Heading headingRC)
+        public Position AreaOnTheRight(Heading headingRC)
         {
             return AreaOnTheRight(headingRC, PositionRC);
         }
-        public Point AreaOnTheFront(Heading headingRC)
+        public Position AreaOnTheFront(Heading headingRC)
         {
             return AreaOnTheFront(headingRC, PositionRC);
         }

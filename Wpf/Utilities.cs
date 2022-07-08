@@ -16,27 +16,19 @@ namespace Wpf
 
         public static Position ReadUID(UIElement uiElement)
         {
-
             int[] yx = uiElement.Uid.Split(',').Select(n => int.Parse(n)).ToArray();
             return new Position(yx[0], yx[1]);
         }
 
         //extension methods
-        public static Point Left(this Point p)
+        public static Position ToPosition(this Point point)
         {
-            return new Point(p.X - 1, p.Y);
+            return new Position((int)point.Y, (int)point.X);
         }
-        public static Point Right(this Point p)
+        public static Point ToPoint(this Position position)
         {
-            return new Point(p.X + 1, p.Y);
+            return new Point(position.X, position.Y);
         }
-        public static Point Up(this Point p)
-        {
-            return new Point(p.X, p.Y-1);
-        }
-        public static Point Down(this Point p)
-        {
-            return new Point(p.X, p.Y+1);
-        }
+
     }
 }

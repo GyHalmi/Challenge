@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace Wpf
@@ -19,28 +22,31 @@ namespace Wpf
         public Map MapOwn { get; set; }
         private int MapRefreshTime { get; set; }
 
-        public RoboCleaner(Map mapExternal, Rectangle roboCleaner)
+        private Canvas MapGUI { get; set; }
+
+        //public RoboCleaner(Map mapExternal, Rectangle roboCleaner)
+        public RoboCleaner(Rectangle roboCleaner)
         {
             RC = roboCleaner;
-            MapExternal = mapExternal;
+            MapGUI = (Canvas)RC.Parent;
             HeadingRC = Heading.Up;
             MapRefreshTime = 600;
         }
 
         public void CleanTheHouse()
         {
-            DisplayMap(MapExternal);
+            //DisplayMap(MapExternal);
             MapOwn = CreateMap();
-            DisplayTwoMaps(MapExternal, MapOwn);
+            //DisplayTwoMaps(MapExternal, MapOwn);
 
-            List<Point> nearestUncleanedZones = FindNearestUncleanedZones();
+            List<Position> nearestUncleanedZones = FindNearestUncleanedZones();
 
             while (nearestUncleanedZones.Count > 0)
             {
-                List<List<Point>> possibleWays = new List<List<Point>>();
+                List<List<Position>> possibleWays = new List<List<Position>>();
                 nearestUncleanedZones.ForEach(pos => possibleWays.Add(FindShortestWayTo(pos)));
 
-                List<Point> shortestWay = possibleWays.Aggregate((stored, next) => stored.Count > next.Count ? next : stored);
+                List<Position> shortestWay = possibleWays.Aggregate((stored, next) => stored.Count > next.Count ? next : stored);
 
                 bool barrierFound = !MoveOnWay(shortestWay);
                 if (!barrierFound) barrierFound |= !CleanActualZone();
@@ -54,10 +60,10 @@ namespace Wpf
         /// if no uncleaned zones found retuns an empty List
         /// </summary>
         /// <returns></returns>
-        private List<Point> FindNearestUncleanedZones()
+        private List<Position> FindNearestUncleanedZones()
         {
             int[][] mapCoords = MapOwn.Coordinates;
-            Point posRC = MapOwn.PositionRC;
+            Position posRC = MapOwn.PositionRC;
 
             int xMax = 0;
             foreach (int[] x in mapCoords)
@@ -66,7 +72,7 @@ namespace Wpf
             }
             int maxLength = mapCoords.Length > xMax ? mapCoords.Length : xMax;
 
-            HashSet<Point> closestPoints = new HashSet<Point>();
+            HashSet<Position> closestPoints = new HashSet<Position>();
             //HashSet<Position> closestPoints = new HashSet<Position>();
             int i = 1;
 
@@ -87,7 +93,7 @@ namespace Wpf
                     {
                         if (mapCoords[y + i][x + j] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y + i, posRC.X + j));
+                            closestPoints.Add(new Position(posRC.Y + i, posRC.X + j));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -98,7 +104,7 @@ namespace Wpf
                     {
                         if (mapCoords[y + i][x - j] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y + i, posRC.X - j));
+                            closestPoints.Add(new Position(posRC.Y + i, posRC.X - j));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -115,7 +121,7 @@ namespace Wpf
                     {
                         if (mapCoords[y + j][x - i] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y + j, posRC.X - i));
+                            closestPoints.Add(new Position(posRC.Y + j, posRC.X - i));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -126,7 +132,7 @@ namespace Wpf
                     {
                         if (mapCoords[y - j][x - i] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y - j, posRC.X - i));
+                            closestPoints.Add(new Position(posRC.Y - j, posRC.X - i));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -141,7 +147,7 @@ namespace Wpf
                     {
                         if (mapCoords[y - i][x + j] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y - i, posRC.X + j));
+                            closestPoints.Add(new Position(posRC.Y - i, posRC.X + j));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -152,7 +158,7 @@ namespace Wpf
                     {
                         if (mapCoords[y - i][x - j] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y - i, posRC.X - j));
+                            closestPoints.Add(new Position(posRC.Y - i, posRC.X - j));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -169,7 +175,7 @@ namespace Wpf
                     {
                         if (mapCoords[y + j][x + i] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y + j, posRC.X + i));
+                            closestPoints.Add(new Position(posRC.Y + j, posRC.X + i));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -180,7 +186,7 @@ namespace Wpf
                     {
                         if (mapCoords[y - j][x + i] == 0)
                         {
-                            closestPoints.Add(new Point(posRC.Y - j, posRC.X + i));
+                            closestPoints.Add(new Position(posRC.Y - j, posRC.X + i));
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -199,25 +205,25 @@ namespace Wpf
         /// </summary>
         /// <param name="targetPosition"></param>
         /// <returns></returns>
-        private List<Point> FindShortestWayTo(Point targetPosition)
+        private List<Position> FindShortestWayTo(Position targetPosition)
         {
-            List<List<Point>> shortestWays = new List<List<Point>>();
+            List<List<Position>> shortestWays = new List<List<Position>>();
 
-            Dictionary<Point, int> wayWithMethods = new Dictionary<Point, int>();
+            Dictionary<Position, int> wayWithMethods = new Dictionary<Position, int>();
             wayWithMethods.Add(MapOwn.PositionRC, -1);
 
             while (wayWithMethods.Count != 0)
             {
                 bool success = false;
-                Point last = wayWithMethods.Last().Key;
-                Point next;
+                Position last = wayWithMethods.Last().Key;
+                Position next;
 
 
                 //decreaseDistanceX
                 int methodNumber = 0;
                 if (ongoin() && last.X != targetPosition.X)
                 {
-                    next = last.X > targetPosition.X ? new Point(last.X - 1, last.Y) : new Point(last.X + 1, last.Y);
+                    next = last.X > targetPosition.X ? new Position(last.Y,last.X - 1) : new Position(last.Y,last.X + 1);
                     evaluateNext();
                 }
 
@@ -225,7 +231,7 @@ namespace Wpf
                 methodNumber = 1;
                 if (ongoin() && last.Y != targetPosition.Y)
                 {
-                    next = last.Y > targetPosition.Y ? new Point(last.X, last.Y - 1) : new Point(last.X, last.Y + 1);
+                    next = last.Y > targetPosition.Y ? new Position(last.Y - 1, last.X ) : new Position(last.Y + 1,last.X );
                     evaluateNext();
                 }
 
@@ -233,19 +239,19 @@ namespace Wpf
                 methodNumber = 2;
                 if (ongoin() && last.X != targetPosition.X)
                 {
-                    next = last.X > targetPosition.X ? new Point(last.X + 1, last.Y) : new Point(last.X - 1, last.Y);
+                    next = last.X > targetPosition.X ? new Position(last.Y,last.X + 1 ) : new Position(last.Y, last.X - 1);
                     evaluateNext();
                 }
                 methodNumber = 3; //increase direction right
                 if (ongoin() && last.X == targetPosition.X)
                 {
-                    next = last.Right();
+                    next = last.ShiftRight();
                     evaluateNext();
                 }
                 methodNumber = 4; //increase direction left
                 if (ongoin() && last.X == targetPosition.X)
                 {
-                    next = last.Left();
+                    next = last.ShiftLeft();
                     evaluateNext();
                 }
 
@@ -253,19 +259,19 @@ namespace Wpf
                 methodNumber = 6;
                 if (ongoin() && last.Y != targetPosition.Y)
                 {
-                    next = last.Y > targetPosition.Y ? new Point(last.X, last.Y + 1) : new Point(last.X, last.Y - 1);
+                    next = last.Y > targetPosition.Y ? new Position( last.Y + 1,last.X) : new Position( last.Y - 1, last.X);
                     evaluateNext();
                 }
                 methodNumber = 7; //increase direction up
                 if (ongoin() && last.Y == targetPosition.Y)
                 {
-                    next = last.Up();
+                    next = last.ShiftUp();
                     evaluateNext();
                 }
                 methodNumber = 8; //increase direction down
                 if (ongoin() && last.Y == targetPosition.Y)
                 {
-                    next = last.Down();
+                    next = last.ShiftDown();
                     evaluateNext();
                 }
 
@@ -282,7 +288,7 @@ namespace Wpf
                         shortestWays.Clear();
                     }
                     //store found way
-                    List<Point> newWay = new List<Point>();
+                    List<Position> newWay = new List<Position>();
                     foreach (var posAndMethod in wayWithMethods)
                     {
                         newWay.Add(posAndMethod.Key);
@@ -344,15 +350,15 @@ namespace Wpf
             return shortestWays[shortesIndex];
 
         }
-        private int CountTurnsOnWay(List<Point> way)
+        private int CountTurnsOnWay(List<Position> way)
         {
             int turns = 0;
             int heading = (int)HeadingRC;
 
             for (int i = 1; i < way.Count; i++)
             {
-                Point robo = way[i - 1];
-                Point next = way[i];
+                Position robo = way[i - 1];
+                Position next = way[i];
 
                 if (Map.AreaOnTheLeft(HeadingRC, robo).Equals(next))
                 {
@@ -385,15 +391,13 @@ namespace Wpf
         /// returns true if the end of the way is reached, else stops before wall and returns false
         /// </summary>
         /// <param name="way"></param>
-
-
-        private bool MoveOnWay(List<Point> way)
+        private bool MoveOnWay(List<Position> way)
         {
             int i = 1;
 
             while (i < way.Count && MapExternal.CoordinateFigureByPosition(way[i]) != ((int)Figure.Wall))
             {
-                Point p = way[i];
+                Position p = way[i];
                 if (MapOwn.AreaOnTheLeft(HeadingRC).Equals(p))
                 {
                     TurnLeftRC();
@@ -413,7 +417,7 @@ namespace Wpf
                 }
 
                 MoveAndUpdatePositonOnBothMap();
-                DisplayTwoMaps(MapExternal, MapOwn);
+                //DisplayTwoMaps(MapExternal, MapOwn);
                 i++;
             }
 
@@ -443,7 +447,7 @@ namespace Wpf
                     TurnRightRC();
                 }
                 MoveAndUpdatePositonOnBothMap();
-                DisplayTwoMaps(MapExternal, MapOwn);
+                //DisplayTwoMaps(MapExternal, MapOwn);
 
             } while (!WallOnTheFront() && !CleanedOnTheFront() ||
                     !WallOnTheLeft() && !CleanedOnTheLeft() ||
@@ -472,21 +476,21 @@ namespace Wpf
         private void DetectAndAddBarrierToOwnMap()
         {
             Map barrierMap = CreateMap();
-            DisplayTwoMaps(MapExternal, barrierMap);
+            //DisplayTwoMaps(MapExternal, barrierMap);
 
-            double shiftY = MapOwn.PositionRC.Y - barrierMap.PositionRC.Y;
-            double shiftX = MapOwn.PositionRC.X - barrierMap.PositionRC.X;
+            int shiftY = MapOwn.PositionRC.Y - barrierMap.PositionRC.Y;
+            int shiftX = MapOwn.PositionRC.X - barrierMap.PositionRC.X;
 
             for (int y = 0; y < barrierMap.Coordinates.Length; y++)
             {
                 for (int x = 0; x < barrierMap.Coordinates[y].Length; x++)
                 {
-                    Point p = new Point(x, y);
+                    Position p = new Position(x, y);
                     int figure = barrierMap.CoordinateFigureByPosition(p);
-                    if (figure != 0) MapOwn.RefreshCoordinate(new Point(p.X + shiftX, p.Y + shiftY), figure);
+                    if (figure != 0) MapOwn.RefreshCoordinate(new Position( p.Y + shiftY, p.X + shiftX), figure);
                 }
             }
-            DisplayTwoMaps(MapExternal, MapOwn);
+            //DisplayTwoMaps(MapExternal, MapOwn);
 
 
         }
@@ -495,29 +499,30 @@ namespace Wpf
         private Map CreateMap()
         {
             SetHeadingToStartEdgeDetection();
-            (List<Point> cleanedPath, List<Point> barriers) edgeDetection = DetectEdges();
+            (List<Position> cleanedPath, List<Position> barriers) edgeDetection = DetectEdges();
 
             //measure map dimensons /array lenghts
-            (double minimum, double maximum) barrierYMinMax = YMinMax(edgeDetection.barriers);
-            (double minimum, double maximum) barrierXMinMax = XMinMax(edgeDetection.barriers);
-            (double minimum, double maximum) pathYMinMax = YMinMax(edgeDetection.cleanedPath);
-            (double minimum, double maximum) pathXMinMax = XMinMax(edgeDetection.cleanedPath);
+            (int minimum, int maximum) barrierYMinMax = YMinMax(edgeDetection.barriers);
+            (int minimum, int maximum) barrierXMinMax = XMinMax(edgeDetection.barriers);
+            (int minimum, int maximum) pathYMinMax = YMinMax(edgeDetection.cleanedPath);
+            (int minimum, int maximum) pathXMinMax = XMinMax(edgeDetection.cleanedPath);
 
-            double yMin = barrierYMinMax.minimum < pathYMinMax.minimum ? barrierYMinMax.minimum : pathYMinMax.minimum;
-            double yMax = barrierYMinMax.maximum > pathYMinMax.maximum ? barrierYMinMax.maximum : pathYMinMax.maximum;
-            double xMin = barrierXMinMax.minimum < pathXMinMax.minimum ? barrierXMinMax.minimum : pathXMinMax.minimum;
-            double xMax = barrierXMinMax.maximum > pathXMinMax.maximum ? barrierXMinMax.maximum : pathXMinMax.maximum;
+            int yMin = barrierYMinMax.minimum < pathYMinMax.minimum ? barrierYMinMax.minimum : pathYMinMax.minimum;
+            int yMax = barrierYMinMax.maximum > pathYMinMax.maximum ? barrierYMinMax.maximum : pathYMinMax.maximum;
+            int xMin = barrierXMinMax.minimum < pathXMinMax.minimum ? barrierXMinMax.minimum : pathXMinMax.minimum;
+            int xMax = barrierXMinMax.maximum > pathXMinMax.maximum ? barrierXMinMax.maximum : pathXMinMax.maximum;
 
-            Map newMap = new Map(Map.initCoordinates((int)(yMax - yMin + 1), (int)(xMax - xMin + 1)), new Point(0, 0));
-            DisplayTwoMaps(MapExternal, newMap);
 
-            Point shiftCoordinate(Point p)
+            Map newMap = new Map(Map.initCoordinates(yMax - yMin + 1, xMax - xMin + 1), new Position(0, 0));
+            //DisplayTwoMaps(MapExternal, newMap);
+
+            Position shiftCoordinate(Position p)
             {
-                return new Point(p.X - xMin, p.Y - yMin);
+                return new Position( p.Y - yMin,p.X - xMin);
             }
 
             //shift detected coordinates
-            (List<Point> cleanedPath, List<Point> barriers) shiftedCoordinates;
+            (List<Position> cleanedPath, List<Position> barriers) shiftedCoordinates;
             shiftedCoordinates.barriers = edgeDetection.barriers.Select(p => shiftCoordinate(p)).ToList();
             shiftedCoordinates.cleanedPath = edgeDetection.cleanedPath.Select(p => shiftCoordinate(p)).ToList();
 
@@ -538,11 +543,11 @@ namespace Wpf
         /// set heading before detection
         /// </summary>
         /// <returns></returns>
-        private (List<Point> cleanedPath, List<Point> barriers) DetectEdges()
+        private (List<Position> cleanedPath, List<Position> barriers) DetectEdges()
         {
-            List<Point> cleanedPathCoordinates = new List<Point>();
-            HashSet<Point> barriersCoordinates = new HashSet<Point>();
-            Point PositionDetectingRC = new Point(0, 0);
+            List<Position> cleanedPathCoordinates = new List<Position>();
+            HashSet<Position> barriersCoordinates = new HashSet<Position>();
+            Position PositionDetectingRC = new Position(0, 0);
 
             void RecordBarrier()
             {
@@ -583,8 +588,9 @@ namespace Wpf
                 }
                 RecordBarrier();
 
-                MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-                PositionDetectingRC = MoveForwardRC(PositionDetectingRC);
+                MoveOnMapGUI();
+                PositionDetectingRC = Map.AreaOnTheFront(HeadingRC,PositionDetectingRC);
+
                 RecordBarrier();
                 RecordPath();
                 //DisplayMap(MapExternal);
@@ -612,9 +618,9 @@ namespace Wpf
 
             return (cleanedPathCoordinates, barriersCoordinates.ToList());
         }
-        private void FillMapWhithUnreachableWalls(Map map, (List<Point> cleandedPath, List<Point> barriers) pathAndBarriers)
+        private void FillMapWhithUnreachableWalls(Map map, (List<Position> cleandedPath, List<Position> barriers) pathAndBarriers)
         {
-            Dictionary<Point, bool> checkedPositions = new Dictionary<Point, bool>();
+            Dictionary<Position, bool> checkedPositions = new Dictionary<Position, bool>();
             pathAndBarriers.barriers.ForEach(p => checkedPositions.Add(p, false));
 
             while (!checkedPositions.All(p => p.Value == true))
@@ -622,7 +628,7 @@ namespace Wpf
                 checkNeighbours(checkedPositions.First(p => p.Value == false).Key);
             }
 
-            void checkPos(Point pos)
+            void checkPos(Position pos)
             {
                 try
                 {
@@ -639,42 +645,58 @@ namespace Wpf
                 }
             }
 
-            void checkNeighbours(Point pos)
+            void checkNeighbours(Position pos)
             {
-                checkPos(pos.Up());
-                checkPos(pos.Right());
-                checkPos(pos.Down());
-                checkPos(pos.Left());
+                checkPos(pos.ShiftUp());
+                checkPos(pos.ShiftRight());
+                checkPos(pos.ShiftDown());
+                checkPos(pos.ShiftLeft());
                 checkedPositions[pos] = true;
             }
 
         }
-        private (double min, double max) YMinMax(List<Point> positions)
+        private (int min, int max) YMinMax(List<Position> positions)
         {
-            int yMini = (int)positions.Aggregate((min, next) => next.Y < min.Y ? next : min).Y;
-            int yMaxi = (int)positions.Aggregate((max, next) => next.Y > max.Y ? next : max).Y;
+            int yMini = positions.Aggregate((min, next) => next.Y < min.Y ? next : min).Y;
+            int yMaxi = positions.Aggregate((max, next) => next.Y > max.Y ? next : max).Y;
             return (yMini, yMaxi);
         }
-        private (double min, double max) XMinMax(List<Point> positions)
+        private (int min, int max) XMinMax(List<Position> positions)
         {
-            double xMini = positions.Aggregate((min, next) => next.X < min.X ? next : min).X;
-            double xMaxi = positions.Aggregate((max, next) => next.X > max.X ? next : max).X;
+            int xMini = positions.Aggregate((min, next) => next.X < min.X ? next : min).X;
+            int xMaxi = positions.Aggregate((max, next) => next.X > max.X ? next : max).X;
             return (xMini, xMaxi);
         }
 
 
         //environment dependent
+        private Point RcPositionOnMapGUI()
+        {
+            return RC.TranslatePoint(new Point(0, 0), MapGUI);
+        }
+        private Point RcMiddleOnMapGUI()
+        {
+            return RC.TranslatePoint(new Point(RC.ActualWidth / 2, RC.ActualHeight / 2), MapGUI);
+        }
+        private bool IsPointHitsWall(Point p)
+        {
+            HitTestResult res = VisualTreeHelper.HitTest(MapGUI, p);
+            return res.VisualHit is Rectangle rect && rect.Name == Application.Current.FindResource("strWall").ToString();
+        }
         private bool WallOnTheLeft()
         {
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheLeft(HeadingRC)).Equals((int)Figure.Wall);
+            Position left = Map.AreaOnTheLeft(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(left.ToPoint());
         }
         private bool WallOnTheFront()
         {
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheFront(HeadingRC)).Equals((int)Figure.Wall);
+            Position front = Map.AreaOnTheFront(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(front.ToPoint());
         }
         private bool WallOnTheRight()
         {
-            return MapExternal.CoordinateFigureByPosition(MapExternal.AreaOnTheRight(HeadingRC)).Equals((int)Figure.Wall);
+            Position right = Map.AreaOnTheRight(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            return IsPointHitsWall(right.ToPoint());
         }
 
 
@@ -737,9 +759,9 @@ namespace Wpf
             int startHeading = (int)HeadingRC;
             Dictionary<Heading, int> freeWayDistance = new Dictionary<Heading, int>();
 
-            Point pos = MapOwn.PositionRC;
-            double startY = pos.Y;
-            double startX = pos.X;
+            Position pos = MapOwn.PositionRC;
+            int startY = pos.Y;
+            int startX = pos.X;
 
             int cnt;
             int[] notAllowed = new int[] { (int)Figure.Wall, (int)Figure.CleanedArea };
@@ -747,19 +769,19 @@ namespace Wpf
             do
             {
                 cnt = 0;
-                pos = new Point( startX, startY);
+                pos = new Position( startY, startX);
 
                 while (nextPosFigure() != (int)Figure.Wall && nextPosFigure() != (int)Figure.CleanedArea)
                 {
-                    pos = MoveForwardRC(pos);
+                    pos = Map.AreaOnTheFront(HeadingRC,pos);
                     cnt++;
                 }
 
                 int nextPosFigure()
                 {
-                    return MapOwn.CoordinateFigureByPosition(MoveForwardRC(pos));
+                    return MapOwn.CoordinateFigureByPosition(Map.AreaOnTheFront(HeadingRC, pos));
                 }
-                Point p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
+                Position p = MapOwn.PositionRC; // mapown does not mutate while pos does... refrence type?!?!
                 freeWayDistance.Add(HeadingRC, cnt);
                 TurnRightRC();
 
@@ -800,32 +822,37 @@ namespace Wpf
                 turnRightWhileFrontNotFree();
             }
         }
-        private Point MoveForwardRC(Point actualPos)
-        {
-            Point newPos = new Point();
-            switch (HeadingRC)
-            {
-                case Heading.Up:
-                    newPos = actualPos.Up();
-                    break;
-                case Heading.Down:
-                    newPos = actualPos.Down();
-                    break;
-                case Heading.Left:
-                    newPos = actualPos.Left();
-                    break;
-                case Heading.Right:
-                    newPos = actualPos.Right();
-                    break;
-            }
-            return newPos;
-        }
         private void MoveAndUpdatePositonOnBothMap()
         {
-            MapExternal.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapExternal.PositionRC));
-            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MoveForwardRC(MapOwn.PositionRC));
+            MapOwn.MoveOnMapAndUpdatePositionRC(HeadingRC, MapOwn.AreaOnTheFront(HeadingRC));
+            MoveOnMapGUI();
         }
+        private void MoveOnMapGUI()
+        {
+            Rectangle cleanedArea = new Rectangle
+            {
+                Width = RC.ActualWidth,
+                Height = RC.ActualHeight,
+                Fill = Brushes.GreenYellow
+            };
 
+            Point oldPos = RcPositionOnMapGUI();
+
+            Canvas.SetTop(cleanedArea, oldPos.Y);
+            Canvas.SetLeft(cleanedArea, oldPos.X);
+            MapGUI.Children.Add(cleanedArea);
+
+            Point newPos = Map.AreaOnTheFront(HeadingRC, RcPositionOnMapGUI().ToPosition(), OffsetMapGUI()).ToPoint();
+            MapGUI.Children.Remove(RC);
+            Canvas.SetTop(RC, newPos.Y);
+            Canvas.SetLeft(RC, newPos.X);
+            MapGUI.Children.Add(RC);
+
+        }
+       private int OffsetMapGUI()
+        {
+            return (int)RC.ActualWidth;
+        }
 
         private void DisplayMap(Map map)
         {

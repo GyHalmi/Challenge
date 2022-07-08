@@ -31,10 +31,6 @@ namespace Wpf
         public MainWindow()
         {
             InitializeComponent();
-
-            RoboCleaner rc = new RoboCleaner(new Map( MapCoordinates2(), new Point(0,0)),roboSource);
-            rc.CleanTheHouse();
-            MessageBox.Show("ready");
         }
 
         int[][] MapCoordinates2()
@@ -106,13 +102,12 @@ namespace Wpf
         {
             if (ReturnMapGuiShapeWithMouseOver() == null)
             {
-                Rectangle robo = (Rectangle)Application.Current.FindResource("roboCleaner");
                 Rectangle newWall = new Rectangle
                 {
-                    Width = robo.Width,
-                    Height = robo.Height,
+                    Width = roboSource.Width,
+                    Height = roboSource.Height,
                     Fill = Brushes.Black,
-                    Uid="12"
+                    Name = Application.Current.FindResource("strWall").ToString()
                 };
 
                 SetPosAndUidAccordingToSelector(newWall);
@@ -164,7 +159,6 @@ namespace Wpf
 
             Canvas.SetTop(uiE, y + (borderThicknessOnOneAxis + borderDistance) / 2);
             Canvas.SetLeft(uiE, x + (borderThicknessOnOneAxis + borderDistance) / 2);
-            Utilities.SetUID(uiE,y, x);
         }
         private void EditMap()
         {
@@ -197,7 +191,10 @@ namespace Wpf
             rdbAddRc.IsEnabled = true;
         }
 
-
+        private void btnStart_Click(object sender, RoutedEventArgs e)
+        {
+            new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
+        }
     }
 
 

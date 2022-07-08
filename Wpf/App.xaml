@@ -1,9 +1,13 @@
 ﻿<Application x:Class="Wpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:local="clr-namespace:Wpf"
+             xmlns:converters ="clr-namesape:Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red"></Rectangle>
+        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red" Name="RC"></Rectangle>
+        <sys:String x:Key="strWall">Wall</sys:String>
+        
     </Application.Resources>
 </Application>
