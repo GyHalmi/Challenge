@@ -54,6 +54,7 @@ namespace Wpf
 
                 nearestUncleanedZones = FindNearestUncleanedZones();
             }
+            MessageBox.Show("ready!");
         }
 
         /// <summary>
@@ -394,8 +395,9 @@ namespace Wpf
         private bool MoveOnWay(List<Position> way)
         {
             int i = 1;
+            bool wallAhead = false;
 
-            while (i < way.Count && MapExternal.CoordinateFigureByPosition(way[i]) != ((int)Figure.Wall))
+            while (i < way.Count && !wallAhead)
             {
                 Position p = way[i];
                 if (MapOwn.AreaOnTheLeft(HeadingRC).Equals(p))
@@ -416,7 +418,9 @@ namespace Wpf
                     TurnRightRC();
                 }
 
-                MoveAndUpdatePositonOnBothMap();
+                wallAhead = WallOnTheFront();
+                if(!wallAhead) MoveAndUpdatePositonOnBothMap();
+
                 //DisplayTwoMaps(MapExternal, MapOwn);
                 i++;
             }
@@ -676,7 +680,7 @@ namespace Wpf
         }
         private Point RcMiddleOnMapGUI()
         {
-            return RC.TranslatePoint(new Point(RC.ActualWidth / 2, RC.ActualHeight / 2), MapGUI);
+            return RC.TranslatePoint(new Point(RC.Width / 2, RC.Height / 2), MapGUI);
         }
         private bool IsPointHitsWall(Point p)
         {
@@ -685,17 +689,17 @@ namespace Wpf
         }
         private bool WallOnTheLeft()
         {
-            Position left = Map.AreaOnTheLeft(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            Position left = Map.AreaOnTheLeft(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.Width);
             return IsPointHitsWall(left.ToPoint());
         }
         private bool WallOnTheFront()
         {
-            Position front = Map.AreaOnTheFront(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            Position front = Map.AreaOnTheFront(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.Width);
             return IsPointHitsWall(front.ToPoint());
         }
         private bool WallOnTheRight()
         {
-            Position right = Map.AreaOnTheRight(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.ActualWidth);
+            Position right = Map.AreaOnTheRight(HeadingRC, RcMiddleOnMapGUI().ToPosition(), (int)RC.Width);
             return IsPointHitsWall(right.ToPoint());
         }
 
@@ -831,9 +835,10 @@ namespace Wpf
         {
             Rectangle cleanedArea = new Rectangle
             {
-                Width = RC.ActualWidth,
-                Height = RC.ActualHeight,
-                Fill = Brushes.GreenYellow
+                Width = RC.Width,
+                Height = RC.Height,
+                Fill = Brushes.GreenYellow,
+                Name = "cleaned"
             };
 
             Point oldPos = RcPositionOnMapGUI();
@@ -842,16 +847,14 @@ namespace Wpf
             Canvas.SetLeft(cleanedArea, oldPos.X);
             MapGUI.Children.Add(cleanedArea);
 
-            Point newPos = Map.AreaOnTheFront(HeadingRC, RcPositionOnMapGUI().ToPosition(), OffsetMapGUI()).ToPoint();
+            Point newPos = Map.AreaOnTheFront(HeadingRC, RcPositionOnMapGUI().ToPosition(), (int)RC.Width).ToPoint();
             MapGUI.Children.Remove(RC);
             Canvas.SetTop(RC, newPos.Y);
             Canvas.SetLeft(RC, newPos.X);
             MapGUI.Children.Add(RC);
 
-        }
-       private int OffsetMapGUI()
-        {
-            return (int)RC.ActualWidth;
+            MapGUI.UpdateLayout();
+            //Thread.Sleep(this.MapRefreshTime);
         }
 
         private void DisplayMap(Map map)

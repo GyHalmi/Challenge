@@ -51,7 +51,7 @@ namespace Wpf
                     pos = basePosition.ShiftUp(offset);
                     break;
             }
-            return basePosition;
+            return pos;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Wpf
                     pos = basePosition.ShiftDown(offset);
                     break;
             }
-            return basePosition;
+            return pos;
         }
         
         /// <summary>
@@ -115,7 +115,7 @@ namespace Wpf
                     break;
             }
 
-            return basePosition;
+            return pos;
         }
 
 

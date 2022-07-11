@@ -11,19 +11,21 @@
         <CommandBinding x:Name="CommDrawWall" Command="local:CustomCommands.DrawWall" CanExecute="CommDrawWall_CanExecute" Executed="CommDrawWall_Executed"/>
     </Window.CommandBindings>-->
     <Window.Resources>
-        <SolidColorBrush x:Key="brsActive" Color="YellowGreen"/>
-        <SolidColorBrush x:Key="brsInactive" Color="AliceBlue"/>
+
     </Window.Resources>
     <DockPanel>
         <WrapPanel DockPanel.Dock="Top">
-            <TextBlock Name="txtCheck" Height="auto">text:</TextBlock>
+            <TextBlock Height="auto">MapGUI.Children.Count:</TextBlock>
+            <TextBlock Text="{Binding ElementName=MapGUI, Path=Children.Count, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold"/>
+            <TextBlock>, .Capacity:</TextBlock>
+            <TextBlock Text="{Binding ElementName=MapGUI, Path=Children.Capacity, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold"/>
         </WrapPanel>
         <StackPanel DockPanel.Dock="Right" Width="150">
             <StackPanel.Resources>
                 <Style TargetType="Button">
                     <Setter Property="Width" Value="100"/>
                     <Setter Property="Margin" Value="5" />
-                    <Setter Property="Background" Value="{StaticResource brsInactive}" />
+                    <Setter Property="Background" Value="AliceBlue" />
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="Transparent" />
@@ -42,7 +44,7 @@
             <Button Name="btnStart" Click="btnStart_Click">Start cleaning</Button>
         </StackPanel>
         <Border BorderBrush="Black" BorderThickness="3">
-            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="MapGUI_MouseMove" MouseDown="MapGUI_MouseDown" >
+            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="MapGUI_MouseMove" MouseDown="MapGUI_MouseDown" DataContext="MapGUI" >
 
             </Canvas>
         </Border>

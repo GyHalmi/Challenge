@@ -31,6 +31,7 @@ namespace Wpf
         public MainWindow()
         {
             InitializeComponent();
+            btnStart.IsEnabled = false;
         }
 
         int[][] MapCoordinates2()
@@ -110,7 +111,7 @@ namespace Wpf
                     Name = Application.Current.FindResource("strWall").ToString()
                 };
 
-                SetPosAndUidAccordingToSelector(newWall);
+                SetPosAccordingToSelector(newWall);
                 MapGUI.Children.Add(newWall);
             }
 
@@ -130,9 +131,10 @@ namespace Wpf
             if (roboCleanerOnMapGUI is null && ReturnMapGuiShapeWithMouseOver() == null)
             {
                 roboCleanerOnMapGUI = roboSource;
-                SetPosAndUidAccordingToSelector(roboCleanerOnMapGUI);
+                SetPosAccordingToSelector(roboCleanerOnMapGUI);
                 MapGUI.Children.Add(roboCleanerOnMapGUI);
                 rdbAddRc.IsEnabled = false;
+                btnStart.IsEnabled = true;
             }
         }
         /// <summary>
@@ -142,15 +144,23 @@ namespace Wpf
         private Shape ReturnMapGuiShapeWithMouseOver()
         {
             Shape sh = null;
-            int i = 0;
-            while (i < MapGUI.Children.Count && sh == null)
+            DependencyObject visualHit = null;
+
+            try
             {
-                if (MapGUI.Children[i] is Shape shape && shape.IsMouseOver) sh = shape;
-                i++;
+                visualHit = VisualTreeHelper.HitTest(MapGUI, Mouse.GetPosition(MapGUI)).VisualHit;
             }
+            //catch if mouse point elsewhere than MapGUI
+            catch (NullReferenceException)
+            {
+                ;
+            }
+
+            if (visualHit != MapGUI && visualHit != selector) sh = (Shape)visualHit;
+
             return sh;
         }
-        private void SetPosAndUidAccordingToSelector(UIElement uiE)
+        private void SetPosAccordingToSelector(UIElement uiE)
         {
             //Canvas.SetTop(uiE, Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2);
             //Canvas.SetLeft(uiE, Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2);
@@ -189,11 +199,26 @@ namespace Wpf
         {
             roboCleanerOnMapGUI = null;
             rdbAddRc.IsEnabled = true;
+            btnStart.IsEnabled = false;
         }
 
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
+            //Task cleanTheHouse = new Task(() => {
+            //    Canvas map = MapGUI;
+            //    new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
+            //});
+            //cleanTheHouse.Start();
+
+            //MapGUI.DataContextChanged += MapGUI_DataContextChanged;
             new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
+
+
+        }
+
+        private void MapGUI_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            //MapGUI.UpdateLayout();
         }
     }
 
