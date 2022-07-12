@@ -265,6 +265,7 @@ namespace Challenge
                     evaluateNext();
                 }
 
+
                 last = wayWithMethods.Last().Key;
 
                 if (success &&
@@ -278,12 +279,14 @@ namespace Challenge
                         shortestWays.Clear();
                     }
                     //store found way
-                    List<Position> newWay = new List<Position>();
-                    foreach (var posAndMethod in wayWithMethods)
-                    {
-                        newWay.Add(posAndMethod.Key);
-                    }
-                    shortestWays.Add(newWay);
+                    shortestWays.Add(wayWithMethods.Keys.ToList());
+
+                    //List<Position> newWay = new List<Position>();
+                    //foreach (var posAndMethod in wayWithMethods)
+                    //{
+                    //    newWay.Add(posAndMethod.Key);
+                    //}
+                    //shortestWays.Add(newWay);
 
                     removeLast();
                 }
@@ -791,7 +794,7 @@ namespace Challenge
         }
         private Position MoveForwardRC(Position actualPos)
         {
-            Position newPos = null;
+            Position newPos = new Position();
             switch (HeadingRC)
             {
                 case Heading.Up:

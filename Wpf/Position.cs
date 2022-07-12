@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace Wpf
 {
-    class Position
+    struct Position
     {
         public static Position ConvertPointToPosition(Point point)
         {
@@ -60,6 +60,15 @@ namespace Wpf
         }
        
 
+        public static bool operator == (Position a, Position b)
+        {
+            return a.X == b.X && a.Y == b.Y;
+        }
+        public static bool operator != (Position a, Position b)
+        {
+            return !(a.X == b.X && a.Y == b.Y);
+        }
+
         public override bool Equals(object other)
         {
             //Position pos = (Position)other;
@@ -69,7 +78,6 @@ namespace Wpf
                 && p.Y == Y
                 && p.X == X;
         }
-
         public override int GetHashCode() => (Y, X).GetHashCode();
     }
 }

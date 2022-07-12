@@ -35,7 +35,7 @@ namespace Wpf
         }
         public static Position AreaOnTheLeft(Heading headingRC, Position basePosition, int offset)
         {
-            Position pos= null;
+            Position pos= new Position();
             switch (headingRC)
             {
                 case Heading.Up:
@@ -67,7 +67,7 @@ namespace Wpf
         }
         public static Position AreaOnTheRight(Heading headingRC, Position basePosition, int offset)
         {
-            Position pos = null;
+            Position pos = new Position();
             switch (headingRC)
             {
                 case Heading.Up:
@@ -98,7 +98,7 @@ namespace Wpf
         }
         public static Position AreaOnTheFront(Heading headingRC, Position basePosition, int offset)
         {
-            Position pos = null;
+            Position pos = new Position();
             switch (headingRC)
             {
                 case Heading.Up:

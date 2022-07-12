@@ -25,7 +25,7 @@ namespace Wpf
 
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             {
-                Position pos = null;
+                Position pos = new Position();
                 if (value is Point p)
                 {
                     pos = new Position((int)p.Y, (int)p.X);

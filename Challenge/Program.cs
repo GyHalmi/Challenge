@@ -29,7 +29,6 @@ namespace Challenge
             rc.CleanTheHouse();
             Console.WriteLine("\ndone!");
             
-            
         }
         public int[][] MapCoordinatesExtra()
         {

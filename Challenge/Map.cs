@@ -142,9 +142,11 @@ namespace Challenge
 
         }
 
+        
         public Position AreaOnTheLeft(Heading headingRC, Position basePosition)
         {
-            Position pos = null;
+            //Position pos = null;
+            Position pos = new Position();
             switch (headingRC)
             {
                 case Heading.Up:
@@ -170,7 +172,7 @@ namespace Challenge
         }
         public Position AreaOnTheRight(Heading headingRC, Position basePosition)
         {
-            Position pos = null;
+            Position pos = new Position();
             switch (headingRC)
             {
                 case Heading.Up:
@@ -196,7 +198,7 @@ namespace Challenge
         }
         public Position AreaOnTheFront(Heading headingRC, Position basePosition)
         {
-            Position pos = null;
+            Position pos = new Position();
             switch (headingRC)
             {
                 case Heading.Up:

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Challenge
 {
-    class Position
+    struct Position
     {
         public int Y { get; set; }
         public int X { get; set; }
@@ -44,5 +44,13 @@ namespace Challenge
         }
 
         public override int GetHashCode() => (Y, X).GetHashCode();
+        public static bool operator == (Position a, Position b)
+        {
+            return a.Y == b.Y && a.X == b.X; 
+        }
+        public static bool operator !=(Position a , Position b)
+        {
+            return !(a.Y == b.Y && a.X == b.X);
+        }
     }
 }
