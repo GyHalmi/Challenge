@@ -348,39 +348,25 @@ namespace Wpf
         }
         private int CountTurnsOnWay(List<Position> way)
         {
-            int turns = 0;
-            int heading = (int)HeadingRC;
+            int turnsTotal = 0;
+            Heading heading = HeadingRC;
 
             for (int i = 1; i < way.Count; i++)
             {
                 Position robo = way[i - 1];
                 Position next = way[i];
 
-                if (Map.AreaOnTheLeft(HeadingRC, robo).Equals(next))
+                int turnsLocal = 0;
+                while (Map.AreaOnTheFront(heading, robo) != next)
                 {
-                    TurnLeftRC();
-                    turns++;
+                    heading = TurnRightRC(heading);
+                    turnsLocal++;
                 }
-                else if (Map.AreaOnTheFront(HeadingRC, robo).Equals(next))
-                {
-                    ;
-                }
-                else if (Map.AreaOnTheRight(HeadingRC, robo).Equals(next))
-                {
-                    TurnRightRC();
-                    turns++;
-                }
-                else
-                {
-                    TurnRightRC();
-                    turns++;
-                    TurnRightRC();
-                    turns++;
-                }
+                if (turnsLocal == 3) turnsLocal = 1;
+                turnsTotal += turnsLocal;
             }
 
-            HeadingRC = (Heading)heading;
-            return turns;
+            return turnsTotal;
         }
 
         /// <summary>
@@ -713,45 +699,56 @@ namespace Wpf
             return MapOwn.CoordinateFigureByPosition(MapOwn.AreaOnTheRight(HeadingRC)).Equals((int)Figure.CleanedArea);
         }
 
-        private void TurnLeftRC()
+        private Heading TurnLeftRC(Heading heading)
         {
-            switch (HeadingRC)
+
+            switch (heading)
             {
                 case Heading.Up:
-                    HeadingRC = Heading.Left;
+                    heading = Heading.Left;
                     break;
                 case Heading.Down:
-                    HeadingRC = Heading.Right;
+                    heading = Heading.Right;
                     break;
                 case Heading.Left:
-                    HeadingRC = Heading.Down;
+                    heading = Heading.Down;
                     break;
                 case Heading.Right:
-                    HeadingRC = Heading.Up;
+                    heading = Heading.Up;
                     break;
                     //default:
                     //    break;
             }
+            return heading;
+        }
+        private void TurnLeftRC()
+        {
+            HeadingRC = TurnLeftRC(HeadingRC);
+        }
+        private Heading TurnRightRC(Heading heading)
+        {
+            switch (heading)
+            {
+                case Heading.Up:
+                    heading = Heading.Right;
+                    break;
+                case Heading.Down:
+                    heading = Heading.Left;
+                    break;
+                case Heading.Left:
+                    heading = Heading.Up;
+                    break;
+                case Heading.Right:
+                    heading = Heading.Down;
+                    break;
+                    //default:
+                    //    break;
+            }
+            return heading;
         }
         private void TurnRightRC()
         {
-            switch (HeadingRC)
-            {
-                case Heading.Up:
-                    HeadingRC = Heading.Right;
-                    break;
-                case Heading.Down:
-                    HeadingRC = Heading.Left;
-                    break;
-                case Heading.Left:
-                    HeadingRC = Heading.Up;
-                    break;
-                case Heading.Right:
-                    HeadingRC = Heading.Down;
-                    break;
-                    //default:
-                    //    break;
-            }
+            HeadingRC = TurnRightRC(HeadingRC);  
         }
         private void SetHeadingToLongestWay()
         {
