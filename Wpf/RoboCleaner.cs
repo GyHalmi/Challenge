@@ -63,11 +63,11 @@ namespace Wpf
         /// <returns></returns>
         private List<Position> FindNearestUncleanedZones()
         {
-            int[][] mapCoords = MapOwn.Coordinates;
+            sbyte[][] mapCoords = MapOwn.Coordinates;
             Position posRC = MapOwn.PositionRC;
 
             int xMax = 0;
-            foreach (int[] x in mapCoords)
+            foreach (sbyte[] x in mapCoords)
             {
                 if (x.Length > xMax) xMax = x.Length;
             }
@@ -442,7 +442,7 @@ namespace Wpf
         }
         private void RecordBarriersAround()
         {
-            int figWall = (int)Figure.Wall;
+            sbyte figWall = (sbyte)Figure.Wall;
 
             if (WallOnTheLeft())
             {
@@ -471,7 +471,7 @@ namespace Wpf
                 for (int x = 0; x < barrierMap.Coordinates[y].Length; x++)
                 {
                     Position p = new Position(x, y);
-                    int figure = barrierMap.CoordinateFigureByPosition(p);
+                    sbyte figure = barrierMap.CoordinateFigureByPosition(p);
                     if (figure != 0) MapOwn.RefreshCoordinate(new Position( p.Y + shiftY, p.X + shiftX), figure);
                 }
             }

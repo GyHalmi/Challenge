@@ -12,13 +12,13 @@ namespace Wpf
 
     class Map
     {
-        public static int[][] initCoordinates(int y, int x)
+        public static sbyte[][] initCoordinates(int y, int x)
         {
-            int[][] mapCoordinates;
-            mapCoordinates = new int[y][];
+            sbyte[][] mapCoordinates;
+            mapCoordinates = new sbyte[y][];
             for (int i = 0; i < mapCoordinates.Length; i++)
             {
-                mapCoordinates[i] = new int[x];
+                mapCoordinates[i] = new sbyte[x];
             }
             return mapCoordinates;
         }
@@ -120,9 +120,9 @@ namespace Wpf
 
 
         private Random rnd;
-        public int[][] Coordinates { get; set; }
+        public sbyte[][] Coordinates { get; set; }
         public Position PositionRC { get; set; }
-        public Map(int[][] coordinates, Position posRC)
+        public Map(sbyte[][] coordinates, Position posRC)
         {
             rnd = new Random();
             Coordinates = coordinates;
@@ -132,18 +132,18 @@ namespace Wpf
         public void PutRoboCleanerOnMap(Position pos, Heading headingRC)
         {
             PositionRC = pos;
-            RefreshCoordinate(pos, (int)headingRC);
+            RefreshCoordinate(pos, (sbyte)headingRC);
         }
       
-        public void RefreshCoordinate(Position coordinate, int figure)
+        public void RefreshCoordinate(Position coordinate, sbyte figure)
         {
-            Coordinates[(int)coordinate.Y][(int)coordinate.X] = figure;
+            Coordinates[coordinate.Y][coordinate.X] = figure;
         }
 
         public void MoveOnMapAndUpdatePositionRC(Heading headingRC, Position newPosition)
         {
-            RefreshCoordinate(PositionRC, (int)Figure.CleanedArea);
-            RefreshCoordinate(newPosition, (int)headingRC);
+            RefreshCoordinate(PositionRC, (sbyte)Figure.CleanedArea);
+            RefreshCoordinate(newPosition, (sbyte)headingRC);
             PositionRC = newPosition;
         }
 
@@ -152,9 +152,9 @@ namespace Wpf
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public int CoordinateFigureByPosition(Position pos)
+        public sbyte CoordinateFigureByPosition(Position pos)
         {
-            int figure = -1;
+            sbyte figure = -1;
             try
             {
                 figure = Coordinates[(int)pos.Y][(int)pos.X];
