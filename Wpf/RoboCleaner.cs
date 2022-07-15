@@ -148,6 +148,7 @@ namespace Wpf
 
                 /*  method */
 
+<<<<<<< HEAD
                 //check left-down
                 checkPosition(p => p.ShiftDown(), p => p.ShiftLeft(), yMin, xMax);
 
@@ -155,6 +156,12 @@ namespace Wpf
                 {
                     newPos = posRC.ShiftLeft(planeShift).ShiftDown(positionShift);
                     newPos = shiftPosition(shiftPlane(newPos));
+=======
+
+                //check left-down
+                void checkPosition(Position newPos, int planeShiftMax, int positionShiftMax)
+                {
+>>>>>>> e34257d76dfe96da9d1018ef8fa6bdf0fc7d1c33
 
 
                 }
@@ -164,7 +171,11 @@ namespace Wpf
                 {
                     newPos = posRC.ShiftLeft(planeShift).ShiftDown(positionShift);
 
+<<<<<<< HEAD
                     if (MapOwn.CoordinateFigureByPosition(newPos) == -1) //if newPos is out of range
+=======
+                    if (MapOwn.CoordinateFigureByPosition(newPos) == -1)
+>>>>>>> e34257d76dfe96da9d1018ef8fa6bdf0fc7d1c33
                     {
                         testPlanePos = posRC.ShiftLeft(0).ShiftDown(positionShift);
                         if (MapOwn.CoordinateFigureByPosition(testPlanePos) != -1)
