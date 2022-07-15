@@ -157,7 +157,7 @@ namespace Wpf
             sbyte figure = -1;
             try
             {
-                figure = Coordinates[(int)pos.Y][(int)pos.X];
+                figure = Coordinates[pos.Y][pos.X];
             }
             catch (IndexOutOfRangeException)
             {
