@@ -83,17 +83,11 @@ namespace Wpf
 
             selector = new Border()
             {
-                //Width = squareSize + borderThicknessOnOneAxis,
-                //Height = squareSize + borderThicknessOnOneAxis,
                 Width = squareSize + borderThicknessOnOneAxis + borderDistance,
                 Height = squareSize + borderThicknessOnOneAxis + borderDistance,
                 BorderBrush = Brushes.DodgerBlue,
                 BorderThickness = new Thickness(borderThicknessOnOneAxis / 2)
             };
-
-
-            //Canvas.SetLeft(selector, squareSize * x - borderThicknessOnOneAxis / 2);
-            //Canvas.SetTop(selector, squareSize * y - borderThicknessOnOneAxis / 2);
 
             Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis + borderDistance) / 2);
             Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis + borderDistance) / 2);
@@ -162,8 +156,6 @@ namespace Wpf
         }
         private void SetPosAccordingToSelector(UIElement uiE)
         {
-            //Canvas.SetTop(uiE, Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2);
-            //Canvas.SetLeft(uiE, Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2);
             int y = (int)Canvas.GetTop(selector);
             int x = (int)Canvas.GetLeft(selector);
 

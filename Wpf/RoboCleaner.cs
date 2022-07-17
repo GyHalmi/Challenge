@@ -18,9 +18,7 @@ namespace Wpf
     {
         public Rectangle RC { get; set; }
         public Heading HeadingRC { get; set; }
-        private Map MapExternal { get; set; }
         public Map MapOwn { get; set; }
-        private int MapRefreshTime { get; set; }
 
         private Canvas MapGUI { get; set; }
 
@@ -30,7 +28,6 @@ namespace Wpf
             RC = roboCleaner;
             MapGUI = (Canvas)RC.Parent;
             HeadingRC = Heading.Up;
-            MapRefreshTime = 600;
         }
 
         public void CleanTheHouse()
@@ -61,8 +58,6 @@ namespace Wpf
         /// if no uncleaned zones found retuns an empty List
         /// </summary>
         /// <returns></returns>
-
-
         private List<Position> FindNearestUncleanedZones()
         {
             HashSet<Position> closestPoints = new HashSet<Position>();
@@ -71,9 +66,9 @@ namespace Wpf
 
             int xMin, xMax, yMin, yMax;
 
-            yMax = mapCoords.Length;
+            yMax = mapCoords.Length - 1;
             yMin = yMax;
-            xMax = mapCoords[0].Length;
+            xMax = mapCoords[0].Length - 1;
             xMin = xMax;
 
             int longestMeasurableDirection()
@@ -81,361 +76,103 @@ namespace Wpf
                 return Math.Max(Math.Max(xMin, xMax), Math.Max(yMin, yMax));
             }
 
-            void evaluateNewPos(Position newPos)
-            {
-                if (MapOwn.CoordinateFigureByPosition(newPos) == -1)
-                {
-                    throw new IndexOutOfRangeException();
-                }
-                else if (MapOwn.CoordinateFigureByPosition(newPos) == (sbyte)Figure.UncleanedArea)
-                {
-                    closestPoints.Add(newPos);
-                }
-            }
-
 
             int planeShift = 1;
-            while (planeShift <= longestMeasurableDirection())
-            //while (closestPoints.Count == 0 && planeShift <= longestMeasurableDirection())
+            int positionShift = 0;
+
+            void checkPositions(Func<Position, int, Position> shiftPlane, Func<Position, int, Position> shiftPosition, ref int planeShiftMax, ref int positionShiftMax)
             {
-                Position newPos;
-                Position testPlanePos;
-
-                //check down-rigth
-                int positionShift = 0;
-                while (positionShift <= planeShift && planeShift <= yMax && positionShift <= xMax)
+                Position posRClocal = MapOwn.PositionRC;
+                while (positionShift <= planeShift && planeShift <= planeShiftMax && positionShift <= positionShiftMax)
                 {
-                    newPos = posRC.ShiftDown(planeShift).ShiftRight(positionShift);
-                    try
+                    Position newPos = shiftPosition(shiftPlane(posRClocal, planeShift), positionShift);
+
+                    if (newPos.Y == 0 || newPos.Y == MapOwn.Coordinates.Length - 1 ||
+                        newPos.X == 0 || newPos.X == MapOwn.Coordinates[0].Length - 1)
                     {
-                        evaluateNewPos(newPos);
+                        // position point to map edge. it is a wall. no need to check
                     }
-                    catch (IndexOutOfRangeException)
-                    {
-                        testPlanePos = posRC.ShiftDown(0).ShiftRight(positionShift);
-                        try
-                        {
-                            if (MapOwn.CoordinateFigureByPosition(testPlanePos) != -1)
-                            {
-                                yMax = planeShift - 1;
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            xMax = positionShift - 1;
-                        }
-                    }
-                    positionShift++;
-                }
 
-                //check down-left
-                positionShift = 1;
-                while (positionShift <= planeShift && planeShift <= yMax && positionShift <= xMin)
-                {
-                    newPos = posRC.ShiftDown(planeShift).ShiftLeft(positionShift);
-                    try
-                    {
-                        evaluateNewPos(newPos);
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        xMin = positionShift - 1; //yMax is checked at down-right
-                    }
-                    positionShift++;
-                }
-
-
-
-                /*  method */
-
-<<<<<<< HEAD
-                //check left-down
-                checkPosition(p => p.ShiftDown(), p => p.ShiftLeft(), yMin, xMax);
-
-                void checkPosition(Func<Position,Position> shiftPlane,Func<Position,Position> shiftPosition, int planeShiftMax, int positionShiftMax)
-                {
-                    newPos = posRC.ShiftLeft(planeShift).ShiftDown(positionShift);
-                    newPos = shiftPosition(shiftPlane(newPos));
-=======
-
-                //check left-down
-                void checkPosition(Position newPos, int planeShiftMax, int positionShiftMax)
-                {
->>>>>>> e34257d76dfe96da9d1018ef8fa6bdf0fc7d1c33
-
-
-                }
-
-                positionShift = 0;
-                while (positionShift <= planeShift && planeShift <= xMin && positionShift <= yMax)
-                {
-                    newPos = posRC.ShiftLeft(planeShift).ShiftDown(positionShift);
-
-<<<<<<< HEAD
                     if (MapOwn.CoordinateFigureByPosition(newPos) == -1) //if newPos is out of range
-=======
-                    if (MapOwn.CoordinateFigureByPosition(newPos) == -1)
->>>>>>> e34257d76dfe96da9d1018ef8fa6bdf0fc7d1c33
                     {
-                        testPlanePos = posRC.ShiftLeft(0).ShiftDown(positionShift);
-                        if (MapOwn.CoordinateFigureByPosition(testPlanePos) != -1)
+                        Position planeIsInRange = shiftPosition(shiftPlane(posRClocal, 0), positionShift);
+                        if (MapOwn.CoordinateFigureByPosition(planeIsInRange) != -1)
                         {
-                            xMin = planeShift - 1;
+                            planeShiftMax = planeShift - 1;
                         }
                         else
                         {
-                            yMax = positionShift - 1;
+                            positionShiftMax = positionShift - 1;
                         }
                     }
                     else if (MapOwn.CoordinateFigureByPosition(newPos) == (sbyte)Figure.UncleanedArea)
                     {
                         closestPoints.Add(newPos);
                     }
-
-
-
-
-
-                    try
-                    {
-
-                        evaluateNewPos(newPos);
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        testPlanePos = posRC.ShiftLeft(0).ShiftDown(positionShift);
-
-                        if (MapOwn.CoordinateFigureByPosition(testPlanePos) != -1)
-                        {
-                            xMin = planeShift - 1;
-                        }
-                        else
-                        {
-                            yMax = positionShift - 1;
-                        }
-
-                    }
                     positionShift++;
                 }
+            }
 
-
-
-
-
-
-
-                /* ---------- */
-                //check left-down
+            while (closestPoints.Count == 0 && planeShift <= longestMeasurableDirection())
+            {
+                //check
+                /*  
+                 *      p
+                 *     xxx
+                 */
+                //down-rigth
                 positionShift = 0;
-                while (positionShift <= planeShift && planeShift <= xMin && positionShift <= yMax)
-                {
-                    newPos = posRC.ShiftLeft(planeShift).ShiftDown(positionShift);
-                    try
-                    {
-                        evaluateNewPos(newPos);
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        testPlanePos = posRC.ShiftLeft(0).ShiftDown(positionShift);
-                        try
-                        {
-                            if (MapOwn.CoordinateFigureByPosition(testPlanePos) != -1)
-                            {
-                                xMin = planeShift - 1;
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            yMax = positionShift - 1;
-                        }
-                    }
-                    positionShift++;
-                }
+                checkPositions((p, offset) => p.ShiftDown(offset), (p, offset) => p.ShiftRight(offset), ref yMax, ref xMax);
 
-                //check down-left
+                //down-left
                 positionShift = 1;
-                while (positionShift <= planeShift && positionShift <= xMin && planeShift <= yMax)
-                {
-                    newPos = posRC.ShiftDown(planeShift).ShiftLeft(positionShift);
-                    try
-                    {
-                        evaluateNewPos(newPos);
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        xMin = positionShift - 1; //yMax is checked at down-right
-                    }
-                    positionShift++;
-                }
+                checkPositions((p, offset) => p.ShiftDown(offset), (p, offset) => p.ShiftLeft(offset), ref yMax, ref xMin);
+
+                /*   
+                 *   x
+                 *   x p
+                 *   x
+                 */
+                //left-down
+                positionShift = 0;
+                checkPositions((p, offset) => p.ShiftLeft(offset), (p, offset) => p.ShiftDown(offset), ref xMin, ref yMax);
+
+                //left-up
+                positionShift = 1;
+                checkPositions((p, offset) => p.ShiftLeft(offset), (p, offset) => p.ShiftUp(offset), ref xMin, ref yMin);
+
+
+                /*     xxx
+                 *      p
+                 */
+                //up-left
+                positionShift = 0;
+                checkPositions((p, offset) => p.ShiftUp(offset), (p, offset) => p.ShiftLeft(offset), ref yMin, ref xMin);
+
+                //up-right
+                positionShift = 1;
+                checkPositions((p, offset) => p.ShiftUp(offset), (p, offset) => p.ShiftRight(offset), ref yMin, ref xMax);
+
+
+                /*   
+                 *      x
+                 *    p x
+                 *      x
+                 */
+                //right-up
+                positionShift = 0;
+                checkPositions((p, offset) => p.ShiftRight(offset), (p, offset) => p.ShiftUp(offset), ref xMax, ref yMin);
+
+                //right-down
+                positionShift = 1;
+                checkPositions((p, offset) => p.ShiftRight(offset), (p, offset) => p.ShiftDown(offset), ref xMax, ref yMax);
+
                 planeShift++;
             }
-
-
-
+           
             return closestPoints.ToList();
         }
-        private List<Position> FindNearestUncleanedZones(int a)
-        {
 
-            sbyte[][] mapCoords = MapOwn.Coordinates;
-            Position posRC = MapOwn.PositionRC;
-
-
-            int xMin, xMax, yMin, yMax;
-
-            yMax = mapCoords.Length;
-            yMin = yMax;
-            xMax = mapCoords[0].Length;
-            xMin = xMax;
-            //
-            int longestMeasurableDirection()
-            {
-                return Math.Max(Math.Max(xMin, xMax), Math.Max(yMin, yMax));
-            }
-
-            int maxLength = mapCoords.Length > xMax ? mapCoords.Length : xMax;
-
-            HashSet<Position> closestPoints = new HashSet<Position>();
-            int planeShift = 1; //xoffset
-
-            while (closestPoints.Count == 0 && planeShift < longestMeasurableDirection())
-            {
-                int y = posRC.Y;
-                int x = posRC.X;
-                int positionShift = 0;
-                sbyte uncleaned = (sbyte)Figure.UncleanedArea;
-
-
-                //for (int j = 0; j <= i; j++)
-                while (positionShift <= planeShift && closestPoints.Count == 0)
-                {
-
-                    /*      p
-                     *     xxx
-                     */
-                    try
-                    {
-                        if (MapOwn.CoordinateFigureByPosition(posRC.ShiftDown(planeShift).ShiftRight(positionShift)) == uncleaned)
-                            if (mapCoords[y + planeShift][x + positionShift] == 0)
-                            {
-                                closestPoints.Add(new Position(posRC.Y + planeShift, posRC.X + positionShift));
-                            }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-                    try
-                    {
-                        if (mapCoords[y + planeShift][x - positionShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y + planeShift, posRC.X - positionShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-
-                        try
-                        {
-
-                        }
-                        catch
-                        {
-
-                        }
-                        ;
-                    }
-
-
-
-                    /*   
-                     *   x
-                     *   x p
-                     *   x
-                     */
-                    try
-                    {
-                        if (mapCoords[y + positionShift][x - planeShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y + positionShift, posRC.X - planeShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-                    try
-                    {
-                        if (mapCoords[y - positionShift][x - planeShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y - positionShift, posRC.X - planeShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-
-                    /*     xxx
-                     *      p
-                     */
-                    try
-                    {
-                        if (mapCoords[y - planeShift][x + positionShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y - planeShift, posRC.X + positionShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-                    try
-                    {
-                        if (mapCoords[y - planeShift][x - positionShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y - planeShift, posRC.X - positionShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-
-                    /*   
-                     *      x
-                     *    p x
-                     *      x
-                     */
-                    try
-                    {
-                        if (mapCoords[y + positionShift][x + planeShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y + positionShift, posRC.X + planeShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-                    try
-                    {
-                        if (mapCoords[y - positionShift][x + planeShift] == 0)
-                        {
-                            closestPoints.Add(new Position(posRC.Y - positionShift, posRC.X + planeShift));
-                        }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        ;
-                    }
-                    positionShift++;
-                }
-                planeShift++;
-            }
-
-            return closestPoints.ToList();
-        }
         /// <summary>
         /// finds the shortest way to the target or the way to the first uncleaned area towards target
         /// </summary>
@@ -1080,8 +817,12 @@ namespace Wpf
             Canvas.SetLeft(RC, newPos.X);
             MapGUI.Children.Add(RC);
 
-            MapGUI.UpdateLayout();
-            //Thread.Sleep(this.MapRefreshTime);
+            //MapGUI.UpdateLayout();
+
+            Action update = () => MapGUI.UpdateLayout();
+            MapGUI.Dispatcher.Invoke(update, System.Windows.Threading.DispatcherPriority.Render);
+            Thread.Sleep(200);
+
         }
 
         private void DisplayMap(Map map)
