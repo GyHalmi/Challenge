@@ -638,7 +638,7 @@ namespace Wpf
         private bool IsPointHitsWall(Point p)
         {
             HitTestResult res = VisualTreeHelper.HitTest(MapGUI, p);
-            return res.VisualHit is Rectangle rect && rect.Name == Application.Current.FindResource("strWall").ToString();
+            return res.VisualHit is Rectangle rect && rect.Tag.ToString() == Application.Current.FindResource("strWall").ToString();
         }
         private bool WallOnTheLeft()
         {
@@ -802,7 +802,7 @@ namespace Wpf
                 Width = RC.Width,
                 Height = RC.Height,
                 Fill = Brushes.GreenYellow,
-                Name = "cleaned"
+                Tag = "cleaned"
             };
 
             Point oldPos = RcPositionOnMapGUI();

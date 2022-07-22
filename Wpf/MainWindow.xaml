@@ -42,9 +42,10 @@
                 </StackPanel>
             </GroupBox>
             <Button Name="btnStart" Click="btnStart_Click">Start cleaning</Button>
+            <Button Name="btnLoad" Click="btnLoad_Click">Load</Button>
         </StackPanel>
-        <Border BorderBrush="Black" BorderThickness="3">
-            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseMove="MapGUI_MouseMove" MouseDown="MapGUI_MouseDown" DataContext="MapGUI" >
+        <Border x:Name="borderMap" BorderBrush="Black" BorderThickness="3">
+            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" >
 
             </Canvas>
         </Border>

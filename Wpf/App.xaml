@@ -6,7 +6,7 @@
              xmlns:converters ="clr-namesape:Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red" Name="RC"></Rectangle>
+        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red" Tag="RC"></Rectangle>
         <sys:String x:Key="strWall">Wall</sys:String>
         
     </Application.Resources>

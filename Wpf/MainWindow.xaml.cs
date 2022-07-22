@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -28,57 +30,27 @@ namespace Wpf
         Rectangle roboCleanerOnMapGUI = null;
         int borderDistance = 4;
 
+        Canvas actualMapGUI() { return borderMap.Child as Canvas; }
+
         public MainWindow()
         {
             InitializeComponent();
             btnStart.IsEnabled = false;
+            addEventsToMap(MapGUI);
         }
 
-        int[][] MapCoordinates2()
-        {
-
-            int[][] Map;
-            int Rows = 8;
-            int Columns = 6;
-            int Columns2 = 8;
-
-            Map = new int[Rows][];
-            for (int i = 0; i < Rows; i++)
-            {
-                if (i >= 3) Map[i] = new int[Columns2];
-                else Map[i] = new int[Columns];
-
-
-            }
-
-            for (int row = 0; row < Map.Length; row++)
-            {
-                for (int col = 0; col < Map[row].Length; col++)
-                {
-                    if (row == 0 || col == 0 || row == Map.Length - 1 || col == Map[row].Length - 1
-                        || row == 3)
-                    {
-                        Map[row][col] = 1;
-                    }
-                }
-            }
-
-            Map[3][3] = 0;
-
-            return Map;
-        }
         private void DrawSelector(Point mousePosition)
         {
             //must be an even number
             int squareSize = (int)roboSource.Width;
 
-            int x = Math.Min((int)mousePosition.X / squareSize, (int)MapGUI.ActualWidth / squareSize - 1);
-            int y = Math.Min((int)mousePosition.Y / squareSize, (int)MapGUI.ActualHeight / squareSize - 1);
+            int x = Math.Min((int)mousePosition.X / squareSize, (int)actualMapGUI().ActualWidth / squareSize - 1);
+            int y = Math.Min((int)mousePosition.Y / squareSize, (int)actualMapGUI().ActualHeight / squareSize - 1);
 
             if (selector != null &&
                 (Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2 != x || Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2 != y))
             {
-                MapGUI.Children.Remove(selector);
+                actualMapGUI().Children.Remove(selector);
             }
 
             selector = new Border()
@@ -91,7 +63,7 @@ namespace Wpf
 
             Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis + borderDistance) / 2);
             Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis + borderDistance) / 2);
-            MapGUI.Children.Add(selector);
+            actualMapGUI().Children.Add(selector);
         }
         private void DrawWall()
         {
@@ -102,11 +74,11 @@ namespace Wpf
                     Width = roboSource.Width,
                     Height = roboSource.Height,
                     Fill = Brushes.Black,
-                    Name = Application.Current.FindResource("strWall").ToString()
+                    Tag = Application.Current.FindResource("strWall").ToString()
                 };
 
                 SetPosAccordingToSelector(newWall);
-                MapGUI.Children.Add(newWall);
+                actualMapGUI().Children.Add(newWall);
             }
 
         }
@@ -117,7 +89,7 @@ namespace Wpf
             if (ReturnMapGuiShapeWithMouseOver() is Rectangle rect)
             {
                 if (rect == roboCleanerOnMapGUI) RoboRemovedFromGUI();
-                if (rect != null) MapGUI.Children.Remove(rect);
+                if (rect != null) actualMapGUI().Children.Remove(rect);
             }
         }
         private void AddRobo()
@@ -142,7 +114,7 @@ namespace Wpf
 
             try
             {
-                visualHit = VisualTreeHelper.HitTest(MapGUI, Mouse.GetPosition(MapGUI)).VisualHit;
+                visualHit = VisualTreeHelper.HitTest(actualMapGUI(), Mouse.GetPosition(actualMapGUI())).VisualHit;
             }
             //catch if mouse point elsewhere than MapGUI
             catch (NullReferenceException)
@@ -150,7 +122,7 @@ namespace Wpf
                 ;
             }
 
-            if (visualHit != MapGUI && visualHit != selector) sh = (Shape)visualHit;
+            if (visualHit != actualMapGUI() && visualHit != selector) sh = (Shape)visualHit;
 
             return sh;
         }
@@ -173,7 +145,7 @@ namespace Wpf
         }
         private void MapGUI_MouseMove(object sender, MouseEventArgs e)
         {
-            DrawSelector(e.MouseDevice.GetPosition(MapGUI));
+            DrawSelector(e.MouseDevice.GetPosition(actualMapGUI()));
             EditMap();
         }
         private void MapGUI_MouseDown(object sender, MouseButtonEventArgs e)
@@ -183,7 +155,7 @@ namespace Wpf
 
         private void btnResetCanvas_Click(object sender, RoutedEventArgs e)
         {
-            MapGUI.Children.Clear();
+            actualMapGUI().Children.Clear();
             RoboRemovedFromGUI();
         }
 
@@ -203,14 +175,64 @@ namespace Wpf
             //cleanTheHouse.Start();
 
             //MapGUI.DataContextChanged += MapGUI_DataContextChanged;
+            SaveMapGUI();
             new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
-
-
         }
 
-        private void MapGUI_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void SaveMapGUI()
         {
-            //MapGUI.UpdateLayout();
+            actualMapGUI().Children.Remove(selector);
+            using (FileStream fs = File.Open("map.xaml", FileMode.Create))
+            {
+                XamlWriter.Save(actualMapGUI(), fs);
+            }
+            //Debugger.Break();
+        }
+
+        private void LoadMapGUI()
+        {
+            try
+            {
+                Canvas savedCanvas;
+                using (FileStream fs = File.Open("map.xaml", FileMode.Open, FileAccess.Read))
+                {
+                    savedCanvas = XamlReader.Load(fs) as Canvas;
+                }
+
+                addEventsToMap(savedCanvas);
+                bool isRoboSaved = false;
+                foreach (Rectangle rect in savedCanvas.Children)
+                {
+                    if (rect.Tag != null && rect.Tag.ToString() == roboSource.Tag.ToString())
+                    {
+                        isRoboSaved = true;
+                        roboCleanerOnMapGUI = rect;
+                        rdbAddRc.IsEnabled = false;
+                        btnStart.IsEnabled = true;
+                    }
+                }
+                if (!isRoboSaved)
+                {
+                    rdbAddRc.IsEnabled = true;
+                    btnStart.IsEnabled = false;
+                }
+                borderMap.Child = savedCanvas;
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("There is no stored map available");
+            }
+        }
+
+        private void addEventsToMap(Canvas map)
+        {
+            map.MouseMove += MapGUI_MouseMove;
+            map.MouseDown += MapGUI_MouseDown;
+        }
+
+        private void btnLoad_Click(object sender, RoutedEventArgs e)
+        {
+            LoadMapGUI();
         }
     }
 
