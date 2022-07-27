@@ -20,6 +20,10 @@
             <TextBlock>, .Capacity:</TextBlock>
             <TextBlock Text="{Binding ElementName=MapGUI, Path=Children.Capacity, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold"/>
         </WrapPanel>
+        <WrapPanel DockPanel.Dock="Top">
+            <TextBlock>robo enabled</TextBlock>
+            <TextBlock x:Name="tbTest"/>
+        </WrapPanel>
         <StackPanel DockPanel.Dock="Right" Width="150">
             <StackPanel.Resources>
                 <Style TargetType="Button">
@@ -43,9 +47,10 @@
             </GroupBox>
             <Button Name="btnStart" Click="btnStart_Click">Start cleaning</Button>
             <Button Name="btnLoad" Click="btnLoad_Click">Load</Button>
+            <Button x:Name="btnTest" Click="btnTest_Click">disable RC</Button>
         </StackPanel>
         <Border x:Name="borderMap" BorderBrush="Black" BorderThickness="3">
-            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" >
+            <Canvas Name="MapGUI" Background="White" Height="400" Width="400" MouseDown="MapGUI_MouseDown" MouseMove="MapGUI_MouseMove">
 
             </Canvas>
         </Border>

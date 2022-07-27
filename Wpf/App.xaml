@@ -6,8 +6,10 @@
              xmlns:converters ="clr-namesape:Wpf"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <Rectangle x:Key="roboCleaner" Width="20" Height="20" Fill="Red" Tag="RC"></Rectangle>
-        <sys:String x:Key="strWall">Wall</sys:String>
-        
+        <SolidColorBrush x:Key="roboColour" Color="Red"/>
+        <sys:String x:Key="roboTag">RC</sys:String>
+        <sys:Double x:Key="roboWidth">20</sys:Double>
+        <sys:Double x:Key="roboHeight">20</sys:Double>
+        <sys:String x:Key="wallTag">Wall</sys:String>
     </Application.Resources>
 </Application>
