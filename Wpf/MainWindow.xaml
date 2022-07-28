@@ -46,7 +46,8 @@
                 </StackPanel>
             </GroupBox>
             <Button Name="btnStart" Click="btnStart_Click">Start cleaning</Button>
-            <Button Name="btnLoad" Click="btnLoad_Click">Load</Button>
+            <Button Name="btnLoad" Click="btnLoad_Click">Load Map</Button>
+            <Button Name="btnSave" Click="btnSave_Click">Save Map</Button>
             <Button x:Name="btnTest" Click="btnTest_Click">disable RC</Button>
         </StackPanel>
         <Border x:Name="borderMap" BorderBrush="Black" BorderThickness="3">

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -28,6 +29,7 @@ namespace Wpf
         double roboHeight = (double)Application.Current.FindResource("roboHeight");
         Brush roboColour = (Brush)Application.Current.FindResource("roboColour");
         Rectangle roboCleanerOnMapGUI;
+        Point roboStartPosition;
 
         Border selector;
         const int borderThicknessOnOneAxis = 2;
@@ -137,6 +139,7 @@ namespace Wpf
                 SetPosAccordingToSelector(roboCleanerOnMapGUI);
                 if (MapGUI.Children.IndexOf(roboCleanerOnMapGUI) == -1) MapGUI.Children.Add(roboCleanerOnMapGUI);
                 ActivateRC();
+                roboStartPosition = new Point(Canvas.GetLeft(roboCleanerOnMapGUI), Canvas.GetTop(roboCleanerOnMapGUI));
             }
         }
         /// <summary>
@@ -220,17 +223,32 @@ namespace Wpf
             //cleanTheHouse.Start();
 
             //MapGUI.DataContextChanged += MapGUI_DataContextChanged;
-            SaveMapGUI();
+            //SaveMapGUI();
             new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
         }
 
         private void SaveMapGUI()
         {
             MapGUI.Children.Remove(selector);
-            using (FileStream fs = File.Open("map.xaml", FileMode.Create))
+            Canvas.SetLeft(roboCleanerOnMapGUI, roboStartPosition.X);
+            Canvas.SetTop(roboCleanerOnMapGUI, roboStartPosition.Y);
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.DefaultExt = ".xaml";
+            saveFileDialog.InitialDirectory =  @"c:\Users\benti\Desktop\";
+            //saveFileDialog.Filter = ".xaml";
+            saveFileDialog.OverwritePrompt = true;
+            saveFileDialog.ShowDialog();
+            
+
+            using (FileStream fs = File.Open(saveFileDialog.FileName, FileMode.Create))
             {
                 XamlWriter.Save(MapGUI, fs);
             }
+            //using (FileStream fs = File.Open("map.xaml", FileMode.Create))
+            //{
+            //    XamlWriter.Save(MapGUI, fs);
+            //}
             //Debugger.Break();
         }
         private void LoadMapGUI()
@@ -238,7 +256,13 @@ namespace Wpf
             try
             {
                 Canvas savedCanvas;
-                using (FileStream fs = File.Open("map.xaml", FileMode.Open, FileAccess.Read))
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.DefaultExt = ".xaml";
+                openFileDialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory+@"savedMaps\";  //@"c:\Users\benti\Desktop\";
+                //openFileDialog.Filter = ".xaml";
+                openFileDialog.ShowDialog();
+
+                using (FileStream fs = File.Open(openFileDialog.FileName, FileMode.Open, FileAccess.Read))
                 {
                     savedCanvas = XamlReader.Load(fs) as Canvas;
                 }
@@ -285,6 +309,11 @@ namespace Wpf
             {
                 ActivateRC();
             }
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            SaveMapGUI();
         }
     }
 
