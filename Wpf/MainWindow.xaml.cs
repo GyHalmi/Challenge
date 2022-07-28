@@ -29,7 +29,7 @@ namespace Wpf
         Brush roboColour = (Brush)Application.Current.FindResource("roboColour");
         Rectangle roboCleanerOnMapGUI;
 
-        Border selector = null;
+        Border selector;
         const int borderThicknessOnOneAxis = 2;
         int borderDistance = 4;
 
@@ -37,7 +37,7 @@ namespace Wpf
         {
             InitializeComponent();
             InitializeRobocleanerOnMapGUI();
-
+            InitializeSelector();
 
             Binding roboEnabled = new Binding("IsEnabled");
             roboEnabled.Source = roboCleanerOnMapGUI;
@@ -51,6 +51,20 @@ namespace Wpf
             rdbAddRc.SetBinding(Button.IsEnabledProperty, roboEnabledReversed);
 
         }
+
+        private void InitializeSelector()
+        {
+            selector = new Border()
+            {
+                Width = roboWidth + borderThicknessOnOneAxis + borderDistance,
+                Height = roboHeight + borderThicknessOnOneAxis + borderDistance,
+                BorderBrush = Brushes.DodgerBlue,
+                BorderThickness = new Thickness(borderThicknessOnOneAxis / 2)
+            };
+            Canvas.SetZIndex(selector, 2);
+        }
+
+
 
         private void InitializeRobocleanerOnMapGUI()
         {
@@ -75,26 +89,21 @@ namespace Wpf
             //must be an even number
             int squareSize = (int)roboWidth;
 
-            int x = Math.Min((int)mousePosition.X / squareSize, (int)MapGUI.ActualWidth / squareSize - 1);
-            int y = Math.Min((int)mousePosition.Y / squareSize, (int)MapGUI.ActualHeight / squareSize - 1);
+            int x = Math.Min((int)mousePosition.X / squareSize, (int)MapGUI.Width / squareSize - 1);
+            int y = Math.Min((int)mousePosition.Y / squareSize, (int)MapGUI.Height / squareSize - 1);
 
-            if (selector != null &&
-                (Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2 != x || Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2 != y))
+
+            if (MapGUI.Children.IndexOf(selector) == -1)
             {
-                MapGUI.Children.Remove(selector);
+                MapGUI.Children.Add(selector);
+            }
+            if (Canvas.GetLeft(selector) + borderThicknessOnOneAxis / 2 != x ||
+                Canvas.GetTop(selector) + borderThicknessOnOneAxis / 2 != y)
+            {
+                Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis + borderDistance) / 2);
+                Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis + borderDistance) / 2);
             }
 
-            selector = new Border()
-            {
-                Width = squareSize + borderThicknessOnOneAxis + borderDistance,
-                Height = squareSize + borderThicknessOnOneAxis + borderDistance,
-                BorderBrush = Brushes.DodgerBlue,
-                BorderThickness = new Thickness(borderThicknessOnOneAxis / 2)
-            };
-
-            Canvas.SetLeft(selector, squareSize * x - (borderThicknessOnOneAxis + borderDistance) / 2);
-            Canvas.SetTop(selector, squareSize * y - (borderThicknessOnOneAxis + borderDistance) / 2);
-            MapGUI.Children.Add(selector);
         }
         private void DrawWall()
         {
@@ -243,7 +252,7 @@ namespace Wpf
                         Canvas.SetLeft(roboCleanerOnMapGUI, Canvas.GetLeft(rect));
                         ActivateRC();
                     }
-                    else if(rect.Tag != null && rect.Tag.ToString() == "Wall")
+                    else if (rect.Tag != null && rect.Tag.ToString() == "Wall")
                     {
                         Rectangle r = new Rectangle();
                         r.Width = rect.Width;
