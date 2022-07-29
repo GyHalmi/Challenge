@@ -35,6 +35,8 @@ namespace Wpf
         const int borderThicknessOnOneAxis = 2;
         int borderDistance = 4;
 
+        string savedMapsPath = AppDomain.CurrentDomain.BaseDirectory + Application.Current.FindResource("savedMapsPath").ToString();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -233,18 +235,21 @@ namespace Wpf
             Canvas.SetLeft(roboCleanerOnMapGUI, roboStartPosition.X);
             Canvas.SetTop(roboCleanerOnMapGUI, roboStartPosition.Y);
 
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.DefaultExt = ".xaml";
-            saveFileDialog.InitialDirectory =  @"c:\Users\benti\Desktop\";
-            //saveFileDialog.Filter = ".xaml";
-            saveFileDialog.OverwritePrompt = true;
-            saveFileDialog.ShowDialog();
-            
+            Directory.CreateDirectory(savedMapsPath);
+            SaveWindow saveWindow = new SaveWindow();
 
-            using (FileStream fs = File.Open(saveFileDialog.FileName, FileMode.Create))
+            Binding binding = new Binding();
+            string[] files = Directory.GetFiles(savedMapsPath);
+            //files.ToList().too
+            //binding.Source(files.ToDictionar);
+            //saveWindow.list
+
+            using (FileStream fs = File.Open(savedMapsPath+@"mapfile.xaml", FileMode.Create))
             {
+                
                 XamlWriter.Save(MapGUI, fs);
             }
+
             //using (FileStream fs = File.Open("map.xaml", FileMode.Create))
             //{
             //    XamlWriter.Save(MapGUI, fs);

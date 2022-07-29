@@ -11,5 +11,6 @@
         <sys:Double x:Key="roboWidth">20</sys:Double>
         <sys:Double x:Key="roboHeight">20</sys:Double>
         <sys:String x:Key="wallTag">Wall</sys:String>
+        <sys:String x:Key="savedMapsPath">SavedMaps\</sys:String>
     </Application.Resources>
 </Application>
