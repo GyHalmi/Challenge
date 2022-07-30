@@ -36,13 +36,19 @@ namespace Wpf
         int borderDistance = 4;
 
         string savedMapsPath = AppDomain.CurrentDomain.BaseDirectory + Application.Current.FindResource("savedMapsPath").ToString();
+        ObservableCollection<ListBoxItem> savedMaps;
 
         public MainWindow()
         {
             InitializeComponent();
+            InitializeSavedMaps();
             InitializeRobocleanerOnMapGUI();
             InitializeSelector();
 
+
+
+
+            //robo bindings
             Binding roboEnabled = new Binding("IsEnabled");
             roboEnabled.Source = roboCleanerOnMapGUI;
             btnStart.SetBinding(Button.IsEnabledProperty, roboEnabled);
@@ -51,9 +57,42 @@ namespace Wpf
 
             Binding roboEnabledReversed = new Binding("IsEnabled");
             roboEnabledReversed.Source = roboCleanerOnMapGUI;
-            roboEnabledReversed.Converter = new Utilities.ReverseBool();
+            roboEnabledReversed.Converter = new Utilities.ConverterReverseBool();
             rdbAddRc.SetBinding(Button.IsEnabledProperty, roboEnabledReversed);
 
+            //store maps bindings
+            Binding savedMapSelected = new Binding("SelectedItem");
+            savedMapSelected.Source = lbSavedMaps;
+            savedMapSelected.Converter = new Utilities.ConverterObjectIsNullToBool();
+            btnLoad.SetBinding(Button.IsEnabledProperty, savedMapSelected);
+            btnDelete.SetBinding(Button.IsEnabledProperty, savedMapSelected);
+
+            Binding selectedContent = new Binding("SelectedItem");
+            selectedContent.Source = lbSavedMaps;
+            selectedContent.Converter = new Utilities.ConverterSelectedItemToItsContent();
+            txtSave.SetBinding(TextBox.TextProperty, selectedContent);
+
+        }
+
+        private void InitializeSavedMaps()
+        {
+            savedMaps = new ObservableCollection<ListBoxItem>();
+            //savedMaps.Any()
+            //Binding binding 
+            lbSavedMaps.ItemsSource = savedMaps;
+
+
+            try // try to access savedMapsPath
+            {
+                foreach (string item in Directory.GetFiles(savedMapsPath))
+                {
+                    savedMaps.Add(FileNameWithPathToListBoxItem(item));
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                ;
+            }
         }
 
         private void InitializeSelector()
@@ -67,8 +106,6 @@ namespace Wpf
             };
             Canvas.SetZIndex(selector, 2);
         }
-
-
 
         private void InitializeRobocleanerOnMapGUI()
         {
@@ -228,7 +265,14 @@ namespace Wpf
             //SaveMapGUI();
             new RoboCleaner(roboCleanerOnMapGUI).CleanTheHouse();
         }
-
+        private ListBoxItem FileNameWithPathToListBoxItem(string fileNameWithPath)
+        {
+            return new ListBoxItem()
+            {
+                Content = System.IO.Path.GetFileNameWithoutExtension(fileNameWithPath),
+                DataContext = fileNameWithPath
+            };
+        }
         private void SaveMapGUI()
         {
             MapGUI.Children.Remove(selector);
@@ -236,38 +280,23 @@ namespace Wpf
             Canvas.SetTop(roboCleanerOnMapGUI, roboStartPosition.Y);
 
             Directory.CreateDirectory(savedMapsPath);
-            SaveWindow saveWindow = new SaveWindow();
-
-            Binding binding = new Binding();
-            string[] files = Directory.GetFiles(savedMapsPath);
-            //files.ToList().too
-            //binding.Source(files.ToDictionar);
-            //saveWindow.list
-
-            using (FileStream fs = File.Open(savedMapsPath+@"mapfile.xaml", FileMode.Create))
+            string fileNameWithPath = savedMapsPath + txtSave.Text + ".xaml";
+            using (FileStream fs = File.Open(fileNameWithPath, FileMode.Create))
             {
-                
                 XamlWriter.Save(MapGUI, fs);
             }
 
-            //using (FileStream fs = File.Open("map.xaml", FileMode.Create))
-            //{
-            //    XamlWriter.Save(MapGUI, fs);
-            //}
-            //Debugger.Break();
+            savedMaps.Add(FileNameWithPathToListBoxItem(fileNameWithPath));
+
         }
         private void LoadMapGUI()
         {
             try
             {
                 Canvas savedCanvas;
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.DefaultExt = ".xaml";
-                openFileDialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory+@"savedMaps\";  //@"c:\Users\benti\Desktop\";
-                //openFileDialog.Filter = ".xaml";
-                openFileDialog.ShowDialog();
+                string fileNameWithPath = ((ListBoxItem)lbSavedMaps.SelectedItem).DataContext.ToString();
 
-                using (FileStream fs = File.Open(openFileDialog.FileName, FileMode.Open, FileAccess.Read))
+                using (FileStream fs = File.Open(fileNameWithPath, FileMode.Open, FileAccess.Read))
                 {
                     savedCanvas = XamlReader.Load(fs) as Canvas;
                 }
@@ -304,42 +333,19 @@ namespace Wpf
         {
             LoadMapGUI();
         }
-        private void btnTest_Click(object sender, RoutedEventArgs e)
-        {
-            if (roboCleanerOnMapGUI.IsEnabled)
-            {
-                DeactivateRC();
-            }
-            else
-            {
-                ActivateRC();
-            }
-        }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             SaveMapGUI();
         }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            ListBoxItem selectedItem = lbSavedMaps.SelectedItem as ListBoxItem;
+            savedMaps.Remove(selectedItem);
+            File.Delete(selectedItem.DataContext.ToString());
+        }
     }
-
-
-    //private void CommDrawWall_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    //{
-
-    //}
-
-    //private void CommDrawWall_Executed(object sender, ExecutedRoutedEventArgs e)
-    //{
-
-    //}
-
-    //public static class CustomCommands
-    //{
-    //    public static readonly RoutedUICommand DrawWall = new RoutedUICommand
-    //    (
-    //        "DrawWall","DrawWall", typeof(CustomCommands)
-    //    );
-    //}
 
 }
 

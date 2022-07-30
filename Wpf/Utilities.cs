@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace Wpf
@@ -22,7 +23,7 @@ namespace Wpf
         }
 
         //converters
-        public class ReverseBool : IValueConverter
+        public class ConverterReverseBool : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
@@ -33,6 +34,37 @@ namespace Wpf
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 throw new NotSupportedException();
+            }
+        }
+
+        public class ConverterObjectIsNullToBool : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return value != null;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        public class ConverterSelectedItemToItsContent : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                object content = null;
+                if(value != null)
+                {
+                    content = ((ListBoxItem)value).Content;
+                }
+                return content;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return value;
             }
         }
 
